@@ -9,6 +9,9 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.core.serializers import serialize
 
 User = get_user_model()
 
@@ -91,3 +94,29 @@ class BudgetCalculatorView(APIView):
             'budget': float(budget)
         }, status=status.HTTP_200_OK)
         
+def finance_details(request, user_id):
+    incomes = Income.objects.filter(user_id=user_id)
+    expenses = Expense.objects.filter(user_id=user_id)
+
+    combined_data = []
+
+    for income in incomes:
+        combined_data.append({
+            'type': 'income',
+            'category': income.category,
+            'amount': float(income.income),
+            'date': income.date.isoformat(),  # send date as string
+        })
+
+    for expense in expenses:
+        combined_data.append({
+            'type': 'expense',
+            'category': expense.category,
+            'amount': float(expense.expense) * -1,  # Expenses are negative
+            'date': expense.date.isoformat(),
+        })
+
+    # Sort by date ascending
+    combined_data.sort(key=lambda x: x['date'])
+
+    return JsonResponse({'finance': combined_data})

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import FinanceDetails from './financeDetails';
 
 export default function Dashboard() {
   const [userId, setUserId] = useState(null);
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budgetResult, setBudgetResult] = useState(null);
+  const [financeData, setFinanceData] = useState([]);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
 
@@ -33,6 +35,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (userId && startDate && endDate) {
       fetchBudget();
+      fetchFinanceDetails();
     }
   }, [userId, startDate, endDate]);
 
@@ -47,6 +50,16 @@ export default function Dashboard() {
     } catch (error) {
       console.error(error);
       setMessage('Failed to fetch budget.');
+    }
+  };
+
+  const fetchFinanceDetails = async () => {
+    try {
+      const response = await axios.get(`/api/finances/${userId}/finance-details/`);
+      setFinanceData(response.data.finance || []);
+    } catch (error) {
+      console.error(error);
+      setMessage('Failed to fetch finance details.');
     }
   };
 
@@ -68,6 +81,7 @@ export default function Dashboard() {
       setDate('');
       setShowIncomeForm(false);
       fetchBudget();
+      fetchFinanceDetails();
     } catch (error) {
       console.error(error);
       setMessage('Failed to add income.');
@@ -94,6 +108,7 @@ export default function Dashboard() {
       setDate('');
       setShowExpenseForm(false);
       fetchBudget();
+      fetchFinanceDetails();
     } catch (error) {
       console.error(error);
       setMessage('Failed to add expense.');
@@ -118,6 +133,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
         {userId ? (
+          
           <>
             {budgetResult && (
               <div className="bg-gray-800 p-4 rounded-lg mb-6">
@@ -212,6 +228,31 @@ export default function Dashboard() {
                   Submit Expense
                 </button>
               </form>
+            )}
+
+            {/* SCROLL VIEW */}
+            {financeData.length > 0 && (
+              <div className="bg-gray-800 p-4 rounded-lg mb-6 h-64 overflow-y-auto">
+                <h3 className="text-lg font-semibold mb-2">Finance History:</h3>
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1">Category</th>
+                      <th className="px-2 py-1">Amount</th>
+                      <th className="px-2 py-1">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {financeData.map((item, index) => (
+                      <tr key={index}>
+                        <td className="px-2 py-1">{item.category}</td>
+                        <td className="px-2 py-1">{item.amount}</td>
+                        <td className="px-2 py-1">{item.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             {message && <p className="mt-4 text-center">{message}</p>}

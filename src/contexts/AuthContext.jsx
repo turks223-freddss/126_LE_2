@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+axios.defaults.xsrfCookieName = 'csrftoken';
+axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
@@ -10,6 +13,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        axios.get('/api/csrf/');
         const token = localStorage.getItem('token');
         if (token) {
             axios.defaults.headers.common['Authorization'] = `Token ${token}`;

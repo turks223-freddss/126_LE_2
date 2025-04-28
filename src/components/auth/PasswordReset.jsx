@@ -49,13 +49,16 @@ const PasswordReset = () => {
 
     if (uid && token) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-md w-full space-y-8">
-                    <div>
-                        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 p-6">
+                <div className="text-center mb-6">
+                    <h1 className="text-4xl text-gray-900 font-extrabold">Budget Tracker</h1>
+                    <hr className="border-t-2 border-black  mx-auto w-full" />
+                </div>
+                <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg border border-gray-300">
+                        <h2 className="text-2xl text-center font-semibold text-gray-900 mb-4">
                             Reset your password
                         </h2>
-                    </div>
+                    
                     <form className="mt-8 space-y-6" onSubmit={handleResetPassword}>
                         {error && (
                             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -68,24 +71,24 @@ const PasswordReset = () => {
                             </div>
                         )}
                         <div>
-                            <label htmlFor="newPassword" className="sr-only">New Password</label>
+                            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
                             <input
                                 id="newPassword"
                                 name="newPassword"
                                 type="password"
                                 required
-                                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                className="appearance-none block w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                                 placeholder="New Password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                             />
                         </div>
-
-                        <div>
+    
+                        <div className="flex justify-center mt-6">
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="w-1/2 h-1/2 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:scale-105 hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-900 focus:ring-offset-2 disabled:bg-indigo-300 transition-transform duration-200 ease-in-out"
                             >
                                 {loading ? 'Resetting password...' : 'Reset Password'}
                             </button>
@@ -94,13 +97,18 @@ const PasswordReset = () => {
                 </div>
             </div>
         );
+        
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 p-6">
+            <div className="text-center mb-6">
+                <h1 className="text-4xl text-gray-900 font-extrabold">Budget Tracker</h1>
+                <hr className="border-t-2 border-black  mx-auto w-full" />
+            </div>
+            <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg border border-gray-300">
                 <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    <h2 className="text-2xl text-center font-semibold text-gray-900 mb-4">
                         Reset your password
                     </h2>
                 </div>
@@ -116,32 +124,43 @@ const PasswordReset = () => {
                         </div>
                     )}
                     <div>
-                        <label htmlFor="email" className="sr-only">Email address</label>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
                         <input
                             id="email"
                             name="email"
                             type="email"
                             required
-                            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                            className="appearance-none block w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                             placeholder="Email address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
 
-                    <div>
+                    <div className="flex justify-center mt-6">
                         <button
                             type="submit"
                             disabled={loading}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="w-1/2 h-1/2 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:scale-105 hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-900 focus:ring-offset-2 disabled:bg-indigo-300 transition-transform duration-200 ease-in-out"
                         >
                             {loading ? 'Sending reset link...' : 'Send Reset Link'}
                         </button>
                     </div>
+
+                    <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600">
+                            Know your password?{' '}
+                            <a href="/" className="text-indigo-600 hover:text-indigo-900 font-semibold">
+                                Sign in.
+                            </a>
+                        </p>
+                    </div>
+
                 </form>
             </div>
         </div>
     );
+    
 };
 
 export default PasswordReset; 

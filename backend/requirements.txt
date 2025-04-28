@@ -1,0 +1,8 @@
+Django>=5.0
+
+djangorestframework>=3.14
+
+django-cors-headers>=4.3
+
+# If you use a custom user model, no extra package is needed
+# Add any other dependencies below as needed 

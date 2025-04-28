@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,8 +8,8 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
 
 from .serializers import (
     UserRegistrationSerializer,
@@ -62,7 +61,6 @@ class UserLogoutView(APIView):
         logout(request)
         return Response({'message': 'Logout successful'})
 
-@method_decorator(csrf_exempt, name='dispatch')
 class PasswordResetView(APIView):
     permission_classes = [AllowAny]
     
@@ -91,7 +89,6 @@ class PasswordResetView(APIView):
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
     
@@ -113,3 +110,7 @@ class PasswordResetConfirmView(APIView):
                 'error': 'Invalid reset link'
             }, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'detail': 'CSRF cookie set'})

@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # apps
     'users',
-    'dashboard',
+    'finances',
     # rest
     'rest_framework',
 ]
@@ -126,3 +126,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.CustomUser'
+FRONTEND_URL = 'http://localhost:5173'  # Vite dev server URL
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development

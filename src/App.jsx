@@ -7,7 +7,7 @@ import './App.css'
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/password-reset" element={<PasswordReset />} />
       <Route path="/password-reset/:uid/:token" element={<PasswordReset />} />

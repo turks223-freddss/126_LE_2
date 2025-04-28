@@ -16,7 +16,8 @@ const Login = () => {
         setLoading(true);
 
         try {
-            await login({ email, password });
+            const data = await login({ email, password });
+            localStorage.setItem('user_id', data.user_id); // set localStorage here
             navigate('/dashboard');
         } catch (err) {
             setError(err.message || 'Failed to login');

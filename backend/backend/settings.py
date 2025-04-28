@@ -42,11 +42,9 @@ INSTALLED_APPS = [
     'finances',
     # rest
     'rest_framework',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -132,12 +130,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
 FRONTEND_URL = 'http://localhost:5173'  # Vite dev server URL
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-
-CORS_ALLOW_ALL_ORIGINS = True  # For development only!
-# Or, for production:
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",
-# ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",

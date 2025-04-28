@@ -65,11 +65,7 @@ const Register = () => {
                         Create your account
                     </h2>
                 <form onSubmit={handleSubmit}>
-                    {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                            <span className="block sm:inline">{error}</span>
-                        </div>
-                    )}
+                    
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
@@ -121,6 +117,12 @@ const Register = () => {
                             />
                         </div>
                     </div>
+
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+                            <span className="block sm:inline">{error}</span>
+                        </div>
+                    )}
 
                     <div className="flex justify-center mt-6">
                         <button

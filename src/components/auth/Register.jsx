@@ -37,11 +37,18 @@ const Register = () => {
             await register({
                 email: formData.email,
                 username: formData.username,
-                password: formData.password
+                password: formData.password,
+                password2: formData.password2
             });
             navigate('/login');
         } catch (err) {
-            setError(err.message || 'Failed to register');
+            setError(
+                err.response?.data?.detail ||
+                JSON.stringify(err.response?.data) ||
+                err.message ||
+                'Failed to register'
+            );
+            console.error(err.response?.data);
         } finally {
             setLoading(false);
         }

@@ -8,6 +8,9 @@ export default function Dashboard() {
   const [category, setCategory] = useState(''); // New
   const [date, setDate] = useState('');
   const [message, setMessage] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [budgetResult, setBudgetResult] = useState(null);
 
   useEffect(() => {
     // Get user ID from localStorage
@@ -66,6 +69,31 @@ export default function Dashboard() {
     } catch (error) {
       console.error(error);
       setMessage('Failed to add expense.');
+    }
+  };
+
+  const handleCalculateBudget = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setBudgetResult(null);
+
+    if (!startDate || !endDate) {
+      setMessage('Please select both start and end dates.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('/api/finances/budget/', {
+        user_id: userId,
+        start_date: startDate,
+        end_date: endDate,
+      });
+
+      setBudgetResult(response.data);
+      setMessage('Budget calculated successfully!');
+    } catch (error) {
+      console.error(error);
+      setMessage('Failed to calculate budget.');
     }
   };
 
@@ -145,6 +173,46 @@ export default function Dashboard() {
                 Add Expense
               </button>
             </form>
+
+             {/* BUDGET CALCULATOR FORM */}
+             <form onSubmit={handleCalculateBudget} className="flex flex-col gap-4 mb-8">
+              <h2 className="text-xl font-semibold mb-2">Calculate Budget</h2>
+
+              <div>
+                <label className="block text-sm mb-1">Start Date:</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">End Date:</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                  required
+                />
+              </div>
+
+              <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded">
+                Calculate Budget
+              </button>
+            </form>
+
+            {budgetResult && (
+              <div className="bg-gray-800 p-4 rounded-lg mt-4">
+                <h3 className="text-lg font-semibold mb-2">Budget Summary:</h3>
+                <p>Total Income: ₱{budgetResult.total_income}</p>
+                <p>Total Expense: ₱{budgetResult.total_expense}</p>
+                <p>Remaining Budget: ₱{budgetResult.budget}</p>
+              </div>
+            )}
 
             {message && <p className="mt-4 text-center">{message}</p>}
           </>

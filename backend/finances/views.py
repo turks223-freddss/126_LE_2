@@ -155,7 +155,9 @@ def list_user_income(request):
         {
             "id":income.id,
             "category": income.category,
+            "title": income.title,
             "income": float(income.income),
+            "description": income.description,
             "date": income.date.strftime("%Y-%m-%d")
         }
         for income in incomes
@@ -200,13 +202,19 @@ def modify_income(request, income_id):
 
     if request.method == 'PATCH':
         category = request.data.get('category')
+        title = request.data.get('title')
         amount = request.data.get('income')
+        description = request.data.get('description')
         date = request.data.get('date')
 
         if category is not None:
             income.category = category
+        if title is not None:
+            income.title = title
         if amount is not None:
             income.income = amount
+        if description is not None:
+            income.description = description
         if date is not None:
             income.date = date
 

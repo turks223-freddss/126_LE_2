@@ -9,7 +9,13 @@ export default function TransactionHistory() {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
-  const [editedExpense, setEditedExpense] = useState({ category: '', expense: '', date: '' });
+  const [editedExpense, setEditedExpense] = useState({ category: '',title:'', expense: '',description:'' ,date: '' });
+  const [incomeList, setIncomeList] = useState([]);
+  const [editingIncomeId, setEditingIncomeId] = useState(null);
+  const [editedIncome, setEditedIncome] = useState({category: '',title: '',income: '',description: '',date: '',});
+
+
+
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('user_id');
@@ -22,6 +28,7 @@ export default function TransactionHistory() {
     if (userId) {
       fetchFinanceDetails();
       handleFetchExpenses();
+      handleFetchIncome();
     }
   }, [userId]);
 
@@ -50,6 +57,29 @@ export default function TransactionHistory() {
       if (error.response) {
         setError(error.response.data.error || 'Something went wrong.');
         setExpenseList([]);
+        setUsername('');
+      } else {
+        setError('Server error.');
+      }
+    }
+  };
+
+  const handleFetchIncome = async () => {
+    try {
+      const response = await axios.post('/api/finances/list-income/', {
+        userID: userId,
+      });
+  
+      const data = response.data;
+  
+      setUsername(data.user);
+      setIncomeList(data.incomes);
+      setError('');
+    } catch (error) {
+      console.error('Error fetching income:', error);
+      if (error.response) {
+        setError(error.response.data.error || 'Something went wrong.');
+        setIncomeList([]);
         setUsername('');
       } else {
         setError('Server error.');
@@ -95,6 +125,51 @@ export default function TransactionHistory() {
         setError('');
       } else {
         setError('Failed to update expense.');
+      }
+    } catch (err) {
+      console.error('Update error:', err);
+      setError('Server error.');
+    }
+  };
+
+  const handleDeleteIncome = async (id) => {
+    try {
+      const response = await axios.delete(`/api/finances/income/${id}/`);
+      if (response.status === 204) {
+        setIncomeList(incomeList.filter((i) => i.id !== id));
+      } else {
+        setError('Failed to delete income.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      setError('Server error.');
+    }
+  };
+
+  const handleEditIncome = (income) => {
+    setEditingIncomeId(income.id);
+    setEditedIncome({
+      category: income.category,
+      title: income.title,
+      income: income.income,
+      description: income.description,
+      date: income.date,
+    });
+  };
+
+  const handleUpdateIncome = async () => {
+    try {
+      const response = await axios.patch(`/api/finances/income/${editingIncomeId}/`, editedIncome);
+      if (response.status === 200) {
+        const updatedList = incomeList.map((item) =>
+          item.id === editingIncomeId ? { ...item, ...editedIncome } : item
+        );
+        setIncomeList(updatedList);
+        setEditingIncomeId(null);
+        setEditedIncome({ category: '', title: '', income: '', description: '', date: '' });
+        setError('');
+      } else {
+        setError('Failed to update income.');
       }
     } catch (err) {
       console.error('Update error:', err);
@@ -272,12 +347,130 @@ export default function TransactionHistory() {
             </div>
           );
         }else if (activeTab === 'income') {
-      return (
-        <div className="bg-gray-800 p-4 rounded-lg h-[500px] overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-2">Budget Overview:</h3>
-          <p>Allocated vs. Spent budget metrics and visualization.</p>
-        </div>
-      );
+            return (
+                <div className="bg-gray-800 p-4 rounded-lg h-[500px] overflow-y-auto text-white">
+                  <h3 className="text-lg font-semibold mb-4">Incomes for {username || 'User'}</h3>
+            
+                  {error && <p className="text-red-400 mb-2">{error}</p>}
+            
+                  <table className="w-full text-sm text-left table-auto border border-gray-700">
+                    <thead>
+                      <tr className="bg-gray-700">
+                        <th className="px-2 py-1 border border-gray-600">ID</th>
+                        <th className="px-2 py-1 border border-gray-600">Category</th>
+                        <th className="px-2 py-1 border border-gray-600">Title</th>
+                        <th className="px-2 py-1 border border-gray-600">Amount</th>
+                        <th className="px-2 py-1 border border-gray-600">Description</th>
+                        <th className="px-2 py-1 border border-gray-600">Date</th>
+                        <th className="px-2 py-1 border border-gray-600">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {incomeList.map((item) => (
+                        <tr key={item.id} className="border border-gray-700">
+                          {editingIncomeId === item.id ? (
+                            <>
+                              <td className="px-2 py-1 border border-gray-600">{item.id}</td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <select
+                                  value={editedIncome.category}
+                                  onChange={(e) =>
+                                    setEditedIncome({ ...editedIncome, category: e.target.value })
+                                  }
+                                  className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                                >
+                                  <option value="">Select category</option>
+                                  <option value="salary">Salary</option>
+                                  <option value="freelance">Freelance</option>
+                                  <option value="bonus">Bonus</option>
+                                  <option value="gift">Gift</option>
+                                  <option value="other">Other</option>
+                                </select>
+                              </td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <input
+                                  type="text"
+                                  value={editedIncome.title}
+                                  onChange={(e) =>
+                                    setEditedIncome({ ...editedIncome, title: e.target.value })
+                                  }
+                                  className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                                />
+                              </td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <input
+                                  type="number"
+                                  value={editedIncome.income}
+                                  onChange={(e) =>
+                                    setEditedIncome({ ...editedIncome, income: parseFloat(e.target.value) })
+                                  }
+                                  className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                                />
+                              </td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <textarea
+                                  value={editedIncome.description}
+                                  onChange={(e) =>
+                                    setEditedIncome({ ...editedIncome, description: e.target.value })
+                                  }
+                                  className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                                />
+                              </td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <input
+                                  type="date"
+                                  value={editedIncome.date}
+                                  onChange={(e) =>
+                                    setEditedIncome({ ...editedIncome, date: e.target.value })
+                                  }
+                                  className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                                />
+                              </td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <button
+                                  onClick={handleUpdateIncome}
+                                  className="bg-green-500 text-white px-2 py-0.5 rounded hover:bg-green-600 mr-2"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingIncomeId(null)}
+                                  className="bg-gray-500 text-white px-2 py-0.5 rounded hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-2 py-1 border border-gray-600">{item.id}</td>
+                              <td className="px-2 py-1 border border-gray-600">{item.category}</td>
+                              <td className="px-2 py-1 border border-gray-600">{item.title}</td>
+                              <td className="px-2 py-1 border border-gray-600">₱{item.income}</td>
+                              <td className="px-2 py-1 border border-gray-600">{item.description}</td>
+                              <td className="px-2 py-1 border border-gray-600">{item.date}</td>
+                              <td className="px-2 py-1 border border-gray-600">
+                                <button
+                                  onClick={() => handleEditIncome(item)}
+                                  className="bg-yellow-500 text-white px-2 py-0.5 rounded hover:bg-yellow-600 mr-2"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteIncome(item.id)}
+                                  className="bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
     }
   };
 
@@ -326,19 +519,29 @@ export default function TransactionHistory() {
           <div className="flex mb-4 space-x-4">
             <button
               className={`px-4 py-2 rounded ${activeTab === 'history' ? 'bg-red-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-              onClick={() => setActiveTab('history')}
+              onClick={() => {
+                setActiveTab('history');
+                fetchFinanceDetails();
+            }}
             >
               History
             </button>
             <button
               className={`px-4 py-2 rounded ${activeTab === 'expense' ? 'bg-red-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-              onClick={() => setActiveTab('expense')}
+              onClick={() => {
+                setActiveTab('expense');
+                handleFetchExpenses();
+              }}
             >
               Expense
             </button>
             <button
               className={`px-4 py-2 rounded ${activeTab === 'income' ? 'bg-red-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-              onClick={() => setActiveTab('income')}
+              onClick={() => {
+                setActiveTab('income');
+                handleFetchIncome();
+
+            }}
             >
               Income
             </button>

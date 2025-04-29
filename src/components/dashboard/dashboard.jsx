@@ -161,7 +161,9 @@ export default function Dashboard() {
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar active="dashboard" />
 
+
     <div className="flex-1 ml-16 md:ml-64 p-6 flex justify-center items-center overflow-hidden">
+    
     <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
@@ -294,9 +296,16 @@ export default function Dashboard() {
                 <div>
                   <label className="block text-sm mb-1">Expense Amount:</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={expense}
-                    onChange={(e) => setExpense(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d+$/.test(value)) {
+                        setExpense(value);
+                      }
+                    }}
                     className="w-full p-2 rounded bg-gray-800 border border-gray-700"
                     required
                   />

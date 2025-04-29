@@ -181,7 +181,9 @@ def list_user_expense(request):
         {
             "id": expense.id,
             "category": expense.category,
+            "title": expense.title,
             "expense": float(expense.expense),
+            "description": expense.description,
             "date": expense.date.strftime("%Y-%m-%d")
         }
         for expense in expenses
@@ -225,13 +227,19 @@ def modify_expense(request, expense_id):
 
     if request.method == 'PATCH':
         category = request.data.get('category')
+        title = request.data.get('title')
         amount = request.data.get('expense')
+        description = request.data.get('description')
         date = request.data.get('date')
 
         if category is not None:
             expense.category = category
+        if title is not None:
+            expense.title = title
         if amount is not None:
             expense.expense = amount
+        if description is not None:
+            expense.description = description
         if date is not None:
             expense.date = date
 

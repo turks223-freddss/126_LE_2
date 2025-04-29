@@ -61,7 +61,9 @@ export default function TransactionHistory() {
     setEditingId(expense.id);
     setEditedExpense({
       category: expense.category,
+      title: expense.title,
       expense: expense.expense,
+      description: expense.description,
       date: expense.date,
     });
   };
@@ -89,7 +91,7 @@ export default function TransactionHistory() {
         );
         setExpenseList(updatedList);
         setEditingId(null);
-        setEditedExpense({ category: '', expense: '', date: '' });
+        setEditedExpense({ category: '', title: '' ,expense: '',description:'', date: '' });
         setError('');
       } else {
         setError('Failed to update expense.');
@@ -111,7 +113,9 @@ export default function TransactionHistory() {
             <thead>
               <tr>
                 <th className="px-2 py-1">Category</th>
+                <th className="px-2 py-1">Title</th>
                 <th className="px-2 py-1">Amount</th>
+                <th className="px-2 py-1">Description</th>
                 <th className="px-2 py-1">Date</th>
               </tr>
             </thead>
@@ -119,7 +123,9 @@ export default function TransactionHistory() {
               {financeData.map((item, index) => (
                 <tr key={index}>
                   <td className="px-2 py-1">{item.category}</td>
+                  <td className="px-2 py-1">{item.title}</td>
                   <td className="px-2 py-1">₱{item.amount}</td>
+                  <td className="px-2 py-1">{item.description}</td>
                   <td className="px-2 py-1">{item.date}</td>
                 </tr>
               ))}
@@ -146,7 +152,9 @@ export default function TransactionHistory() {
                   <tr className="bg-gray-700">
                     <th className="px-2 py-1 border border-gray-600">ID</th>
                     <th className="px-2 py-1 border border-gray-600">Category</th>
+                    <th className="px-2 py-1 border border-gray-600">Title</th>
                     <th className="px-2 py-1 border border-gray-600">Amount</th>
+                    <th className="px-2 py-1 border border-gray-600">Description</th>
                     <th className="px-2 py-1 border border-gray-600">Date</th>
                     <th className="px-2 py-1 border border-gray-600">Actions</th>
                   </tr>
@@ -158,9 +166,25 @@ export default function TransactionHistory() {
                         <>
                           <td className="px-2 py-1 border border-gray-600">{item.id}</td>
                           <td className="px-2 py-1 border border-gray-600">
+                          <select
+                            value={editedExpense.category}
+                            onChange={(e) =>
+                            setEditedExpense({ ...editedExpense, category: e.target.value })
+                            }
+                            className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                            >
+                                <option value="">Select category</option>
+                                <option value="food">Food</option>
+                                <option value="bills">Bills</option>
+                                <option value="transport">Transport</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="other">Other</option>
+                            </select>
+                          </td>
+                          <td className="px-2 py-1 border border-gray-600">
                             <input
                               type="text"
-                              value={editedExpense.category}
+                              value={editedExpense.title}
                               onChange={(e) =>
                                 setEditedExpense({ ...editedExpense, category: e.target.value })
                               }
@@ -175,6 +199,18 @@ export default function TransactionHistory() {
                                 setEditedExpense({
                                   ...editedExpense,
                                   expense: parseFloat(e.target.value),
+                                })
+                              }
+                              className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
+                            />
+                          </td>
+                          <td className="px-2 py-1 border border-gray-600">
+                            <textarea
+                              value={editedExpense.description}
+                              onChange={(e) =>
+                                setEditedExpense({
+                                  ...editedExpense,
+                                  description: e.target.value,
                                 })
                               }
                               className="w-full bg-gray-600 text-white px-1 py-0.5 rounded"
@@ -209,7 +245,9 @@ export default function TransactionHistory() {
                         <>
                           <td className="px-2 py-1 border border-gray-600">{item.id}</td>
                           <td className="px-2 py-1 border border-gray-600">{item.category}</td>
+                          <td className="px-2 py-1 border border-gray-600">{item.title}</td>
                           <td className="px-2 py-1 border border-gray-600">₱{Number(item.expense).toFixed(2)}</td>
+                          <td className="px-2 py-1 border border-gray-600">{item.description}</td>
                           <td className="px-2 py-1 border border-gray-600">{item.date}</td>
                           <td className="px-2 py-1 border border-gray-600 space-x-1">
                             <button

@@ -1,4 +1,3 @@
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -120,3 +119,61 @@ def finance_details(request, user_id):
     combined_data.sort(key=lambda x: x['date'])
 
     return JsonResponse({'finance': combined_data})
+
+class ReportsView(APIView):
+    def get(self, request, user_id):
+        try:
+            user = get_object_or_404(User, id=user_id)
+            
+            # Get all expenses grouped by category
+            expenses_by_category = Expense.objects.filter(user=user).values('category').annotate(
+                total=Sum('expense')
+            ).order_by('-total')
+            
+            # Get monthly income and expenses
+            monthly_data = []
+            incomes = Income.objects.filter(user=user).values('date__year', 'date__month').annotate(
+                total=Sum('income')
+            )
+            expenses = Expense.objects.filter(user=user).values('date__year', 'date__month').annotate(
+                total=Sum('expense')
+            )
+            
+            # Combine and format monthly data
+            for income in incomes:
+                year = income['date__year']
+                month = income['date__month']
+                month_key = f"{year}-{month:02d}"
+                
+                monthly_data.append({
+                    'month': month_key,
+                    'income': float(income['total']),
+                    'expenses': 0
+                })
+            
+            for expense in expenses:
+                year = expense['date__year']
+                month = expense['date__month']
+                month_key = f"{year}-{month:02d}"
+                
+                # Find or create entry for this month
+                month_entry = next((item for item in monthly_data if item['month'] == month_key), None)
+                if month_entry:
+                    month_entry['expenses'] = float(expense['total'])
+                else:
+                    monthly_data.append({
+                        'month': month_key,
+                        'income': 0,
+                        'expenses': float(expense['total'])
+                    })
+            
+            # Sort monthly data by month
+            monthly_data.sort(key=lambda x: x['month'])
+            
+            return Response({
+                'expenses_by_category': list(expenses_by_category),
+                'monthly_data': monthly_data
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

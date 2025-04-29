@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import AddIncomeView, AddExpenseView, BudgetCalculatorView, finance_details
+from . import views
 
 urlpatterns = [
-    path('add-income/', AddIncomeView.as_view(), name='add-income'),
-    path('add-expense/', AddExpenseView.as_view(), name='add-expense'),
-    path('budget/', BudgetCalculatorView.as_view(), name='budget'),
-    path('<int:user_id>/finance-details/', finance_details, name='finance_details'),
+    path('add-income/', views.AddIncomeView.as_view(), name='add-income'),
+    path('add-expense/', views.AddExpenseView.as_view(), name='add-expense'),
+    path('budget/', views.BudgetCalculatorView.as_view(), name='budget'),
+    path('<int:user_id>/finance-details/', views.finance_details, name='finance-details'),
+    path('<int:user_id>/reports/', views.ReportsView.as_view(), name='reports'),
 ]

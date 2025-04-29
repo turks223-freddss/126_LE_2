@@ -158,12 +158,11 @@ export default function Dashboard() {
 
   return (
     
+
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar active="dashboard" />
 
-
     <div className="flex-1 ml-16 md:ml-64 p-6 flex justify-center items-center overflow-hidden">
-    
     <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 

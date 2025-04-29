@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFinance } from '../../contexts/FinanceContext';
 import { Plus } from 'lucide-react';
 import BudgetSummary from './BudgetSummary';
 import TransactionForm from './TransactionForm';
@@ -8,6 +9,7 @@ import TransactionHistory from './TransactionHistory';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { triggerUpdate } = useFinance();
   const [userId, setUserId] = useState(null);
   const [showForm, setShowForm] = useState(null);
   const [message, setMessage] = useState('');
@@ -80,7 +82,6 @@ export default function Dashboard() {
         date: formData.date
       };
 
-      // Add the correct field based on transaction type
       if (showForm === 'income') {
         payload.income = parseFloat(formData.amount);
       } else {
@@ -95,6 +96,8 @@ export default function Dashboard() {
       
       // Refresh data
       await fetchData(userId);
+      // Trigger update for other components
+      triggerUpdate();
 
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {

@@ -1,25 +1,143 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
+import DashboardLayout from './components/layout/DashboardLayout';
+import AuthLayout from './components/layout/AuthLayout';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import PasswordReset from './components/auth/PasswordReset';
-import './App.css'
 import Dashboard from './components/dashboard/dashboard';
 import FinanceDetails from './components/dashboard/financeDetails';
-import THistory from './components/dashboard/history';
+import History from './components/dashboard/history';
 import Reports from './components/dashboard/reports';
 
+const PrivateRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
+  return user ? children : <Navigate to="/login" replace />;
+};
+
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
+  return !user ? children : <Navigate to="/dashboard" replace />;
+};
+
 function App() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/password-reset" element={<PasswordReset />} />
-      <Route path="/password-reset/:uid/:token" element={<PasswordReset />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/finance-details" element={<FinanceDetails />} />
-      <Route path="/history" element={<THistory />} />
-      <Route path="/reports" element={<Reports />} />
-      {/* Add more routes here, e.g. dashboard, home, etc. */}
+      {/* Public Routes */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <AuthLayout title="Welcome back" subtitle="Sign in to your account">
+              <Login />
+            </AuthLayout>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <AuthLayout title="Create an account" subtitle="Start managing your finances">
+              <Register />
+            </AuthLayout>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/password-reset"
+        element={
+          <PublicRoute>
+            <AuthLayout title="Reset Password" subtitle="Enter your email to reset your password">
+              <PasswordReset />
+            </AuthLayout>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/password-reset/:uid/:token"
+        element={
+          <PublicRoute>
+            <AuthLayout title="Set New Password" subtitle="Enter your new password">
+              <PasswordReset />
+            </AuthLayout>
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected Routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/finance-details"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <FinanceDetails />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <History />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <Reports />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      {/* Default Route */}
+      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
     </Routes>
   );
 }

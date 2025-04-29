@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import FinanceDetails from './financeDetails';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
   const [income, setIncome] = useState('');
   const [expense, setExpense] = useState('');
@@ -141,6 +145,15 @@ export default function Dashboard() {
     setShowExpenseForm(false)
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     
     <div className="flex flex-row items-center  min-h-screen bg-gray-100">
@@ -179,7 +192,7 @@ export default function Dashboard() {
             </li>
             <li>
               <a
-                href="#"
+                href="/reports"
                 className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
               >
                 Reports
@@ -190,7 +203,10 @@ export default function Dashboard() {
 
         {/* Log Out Button */}
         <div className="pt-6">
-          <button className="w-full bg-red-600 hover:bg-red-500 transition-colors text-white py-2 rounded-md font-semibold">
+          <button 
+            onClick={handleLogout}
+            className="w-full bg-red-600 hover:bg-red-500 transition-colors text-white py-2 rounded-md font-semibold"
+          >
             Log Out
           </button>
         </div>

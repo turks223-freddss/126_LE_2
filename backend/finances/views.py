@@ -1,4 +1,3 @@
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,6 +12,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.serializers import serialize
 from rest_framework.decorators import api_view
+from django.db.models.functions import TruncMonth
+from datetime import datetime, timedelta
 
 
 User = get_user_model()
@@ -229,3 +230,63 @@ def modify_expense(request, expense_id):
     elif request.method == 'DELETE':
         expense.delete()
         return Response({"message": "Expense entry deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+def get_reports(request, user_id):
+    try:
+        # Get expense categories data
+        expense_categories = Expense.objects.filter(
+            user_id=user_id
+        ).values('category').annotate(
+            total=Sum('expense')
+        ).order_by('-total')
+
+        # Get monthly data for the last 6 months
+        six_months_ago = datetime.now() - timedelta(days=180)
+        monthly_data = Expense.objects.filter(
+            user_id=user_id,
+            date__gte=six_months_ago
+        ).annotate(
+            month=TruncMonth('date')
+        ).values('month', 'category').annotate(
+            total=Sum('expense')
+        ).order_by('month')
+
+        # Process monthly data into income vs expenses format
+        processed_monthly_data = []
+        current_month = None
+        month_data = {'income': 0, 'expenses': 0}
+
+        for item in monthly_data:
+            month_str = item['month'].strftime('%B %Y')
+            
+            if current_month != month_str:
+                if current_month:
+                    processed_monthly_data.append({
+                        'month': current_month,
+                        'income': month_data['income'],
+                        'expenses': month_data['expenses']
+                    })
+                current_month = month_str
+                month_data = {'income': 0, 'expenses': 0}
+            
+            if item['category'] == 'income':
+                month_data['income'] = item['total']
+            else:
+                month_data['expenses'] = item['total']
+
+        # Add the last month
+        if current_month:
+            processed_monthly_data.append({
+                'month': current_month,
+                'income': month_data['income'],
+                'expenses': month_data['expenses']
+            })
+
+        return Response({
+            'expense_categories': list(expense_categories),
+            'monthly_data': processed_monthly_data
+        })
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)

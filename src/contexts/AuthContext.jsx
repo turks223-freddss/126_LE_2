@@ -58,12 +58,29 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await axios.post('/api/users/logout/');
+            // Get the current token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // If no token, just clear everything
+                setUser(null);
+                return;
+            }
+
+            // Ensure token is in headers
+            axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+            
+            try {
+                // Try to make the logout request
+                await axios.post('/api/users/logout/');
+            } catch (error) {
+                // Log the error but continue with cleanup
+                console.error('Server logout error:', error);
+            }
+        } finally {
+            // Always clean up local state
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
             setUser(null);
-        } catch (error) {
-            throw error.response.data;
         }
     };
 

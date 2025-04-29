@@ -352,7 +352,10 @@ export default function TransactionHistory() {
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDelete(item.id)}
+                              onClick={() => {
+                                handleDelete(item.id);
+                                handleFetchExpenses();
+                              }}
                               className="bg-red-600 px-2 py-1 rounded hover:bg-red-700"
                             >
                               Delete
@@ -477,7 +480,10 @@ export default function TransactionHistory() {
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteIncome(item.id)}
+                                  onClick={() => {
+                                    handleDeleteIncome(item.id);
+                                    handleFetchIncome()
+                                }}
                                   className="bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600"
                                 >
                                   Delete

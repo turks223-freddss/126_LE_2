@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
-import { ArrowUpRight, ArrowDownRight, Filter } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Filter, Download } from 'lucide-react';
 
 export default function History() {
   const { user } = useAuth();
@@ -93,6 +93,51 @@ export default function History() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }))];
 
+  const exportToCSV = () => {
+    // Only proceed if there's data to export
+    if (financeData.length === 0) return;
+
+    // Convert data to CSV format
+    const headers = ['Type', 'Category', 'Amount', 'Date'];
+    const csvData = financeData.map(item => [
+      item.type,
+      item.category || (item.type === 'income' ? 'Income' : 'Expense'),
+      item.amount,
+      new Date(item.date).toLocaleDateString()
+    ]);
+
+    // Add headers to the beginning
+    csvData.unshift(headers);
+
+    // Convert to CSV string
+    const csvString = csvData.map(row => row.join(',')).join('\n');
+
+    // Create blob and download link
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Get current date for filename
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Create filename based on filters
+    let filename = `transactions_${today}`;
+    if (selectedMonth !== 'all') filename += `_${selectedMonth}`;
+    if (selectedCategory !== 'all') filename += `_${selectedCategory}`;
+    if (dateRange.start && dateRange.end) {
+      filename += `_${dateRange.start}_to_${dateRange.end}`;
+    }
+    filename += '.csv';
+
+    // Trigger download
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -114,13 +159,22 @@ export default function History() {
       <Card>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Transaction History</h1>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-          >
-            <Filter className="h-5 w-5" />
-            Filters
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={exportToCSV}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            >
+              <Filter className="h-5 w-5" />
+              Filters
+            </button>
+          </div>
         </div>
 
         {/* Filters Section */}

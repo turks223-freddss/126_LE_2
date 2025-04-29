@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import FinanceDetails from './financeDetails';
 
@@ -170,12 +171,12 @@ export default function Dashboard() {
               </a>
             </li>
             <li>
-              <a
-                href="#"
+              <Link
+                to="/history"
                 className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
               >
                 Transaction History
-              </a>
+              </Link>
             </li>
             <li>
               <a

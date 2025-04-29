@@ -12,6 +12,7 @@ from django.db.models import Sum
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.serializers import serialize
+from rest_framework.decorators import api_view
 
 User = get_user_model()
 
@@ -120,3 +121,109 @@ def finance_details(request, user_id):
     combined_data.sort(key=lambda x: x['date'])
 
     return JsonResponse({'finance': combined_data})
+
+@api_view(['POST'])
+def list_user_income(request):
+    user_id = request.data.get('userID')
+
+    if not user_id:
+        return Response({"error": "userID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = get_object_or_404(User, id=user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    incomes = Income.objects.filter(user=user).order_by('-date')
+
+    # Convert to a list of dictionaries
+    income_data = [
+        {
+            "id":income.id,
+            "category": income.category,
+            "income": float(income.income),
+            "date": income.date.strftime("%Y-%m-%d")
+        }
+        for income in incomes
+    ]
+
+    return Response({"user": user.username, "incomes": income_data}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def list_user_expense(request):
+    user_id = request.data.get('userID')
+
+    if not user_id:
+        return Response({"error": "userID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = get_object_or_404(User, id=user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    expenses = Expense.objects.filter(user=user).order_by('-date')
+
+    expense_data = [
+        {
+            "id": expense.id,
+            "category": expense.category,
+            "expense": float(expense.expense),
+            "date": expense.date.strftime("%Y-%m-%d")
+        }
+        for expense in expenses
+    ]
+
+    return Response({"user": user.username, "expenses": expense_data}, status=status.HTTP_200_OK)
+
+@api_view(['PATCH', 'DELETE'])
+def modify_income(request, income_id):
+    try:
+        income = get_object_or_404(Income, id=income_id)
+    except Income.DoesNotExist:
+        return Response({"error": "Income entry not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        category = request.data.get('category')
+        amount = request.data.get('income')
+        date = request.data.get('date')
+
+        if category is not None:
+            income.category = category
+        if amount is not None:
+            income.income = amount
+        if date is not None:
+            income.date = date
+
+        income.save()
+        return Response({"message": "Income entry updated successfully."}, status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        income.delete()
+        return Response({"message": "Income entry deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    
+
+@api_view(['PATCH', 'DELETE'])
+def modify_expense(request, expense_id):
+    try:
+        expense = get_object_or_404(Expense, id=expense_id)
+    except Expense.DoesNotExist:
+        return Response({"error": "Expense entry not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        category = request.data.get('category')
+        amount = request.data.get('expense')
+        date = request.data.get('date')
+
+        if category is not None:
+            expense.category = category
+        if amount is not None:
+            expense.expense = amount
+        if date is not None:
+            expense.date = date
+
+        expense.save()
+        return Response({"message": "Expense entry updated successfully."}, status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        expense.delete()
+        return Response({"message": "Expense entry deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

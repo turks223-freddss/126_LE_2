@@ -5,6 +5,8 @@ import PasswordReset from './components/auth/PasswordReset';
 import './App.css'
 import Dashboard from './components/dashboard/dashboard';
 import FinanceDetails from './components/dashboard/financeDetails';
+import IncomeList from './components/dashboard/incomeList'
+import ExpenseList from './components/dashboard/expenseList';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
       <Route path="/password-reset/:uid/:token" element={<PasswordReset />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/finance-details" element={<FinanceDetails />} />
+      <Route path='/income-list' element={<IncomeList/>}/>
+      <Route path='/expense-list' element={<ExpenseList/>}/>
       {/* Add more routes here, e.g. dashboard, home, etc. */}
     </Routes>
   );

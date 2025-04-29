@@ -252,6 +252,7 @@ export default function History() {
                 <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3 rounded-tr-lg">Date</th>
               </tr>
+
             </thead>
             <tbody className="divide-y divide-gray-200">
               {financeData.length === 0 ? (

@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+
 import { useFinance } from '../../contexts/FinanceContext';
 import { Plus, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from './sidebar';
 import BudgetSummary from './BudgetSummary';
 import TransactionForm from './TransactionForm';
 import TransactionHistory from './TransactionHistory';
@@ -18,6 +21,7 @@ ChartJS.register(
   LinearScale,
   BarElement
 );
+
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -206,6 +210,7 @@ export default function Dashboard() {
         />
       )}
 
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Transactions */}
@@ -272,6 +277,7 @@ export default function Dashboard() {
             <div>
               <p className="text-sm text-gray-500">Remaining</p>
               <p className="text-lg font-semibold text-blue-600">${budgetData.remainingBudget}</p>
+
             </div>
           </div>
         </div>

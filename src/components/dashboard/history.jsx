@@ -36,7 +36,7 @@ return (
 
     {/* Main Content */}
     <div className="h-full w-full flex justify-center items-center">
-    <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
+    <div className="flex-1 ml-22 md:ml-80 p-6 bg-black justify-center items-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
         <h1 className="text-2xl font-bold mb-4">Transaction History</h1>
 
         <div className="bg-gray-800 p-4 rounded-lg h-[500px] overflow-y-auto">

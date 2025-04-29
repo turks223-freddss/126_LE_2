@@ -105,16 +105,6 @@ function App() {
         }
       />
       <Route
-        path="/finance-details"
-        element={
-          <PrivateRoute>
-            <DashboardLayout>
-              <FinanceDetails />
-            </DashboardLayout>
-          </PrivateRoute>
-        }
-      />
-      <Route
         path="/history"
         element={
           <PrivateRoute>

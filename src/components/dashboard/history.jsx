@@ -1,96 +1,124 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
+import Card from '../ui/Card';
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
-export default function TransactionHistory() {
-const [userId, setUserId] = useState(null);
-const [financeData, setFinanceData] = useState([]);
+export default function History() {
+  const { user } = useAuth();
+  const [userId, setUserId] = useState(null);
+  const [financeData, setFinanceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-useEffect(() => {
-const storedUserId = localStorage.getItem('user_id');
-if (storedUserId) {
-    setUserId(storedUserId);
-}
-}, []);
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('user_id');
+    if (storedUserId) {
+      setUserId(storedUserId);
+    }
+  }, []);
 
-useEffect(() => {
-if (userId) {
-    fetchFinanceDetails();
-}
-}, [userId]);
+  useEffect(() => {
+    if (userId) {
+      fetchFinanceDetails();
+    }
+  }, [userId]);
 
-const fetchFinanceDetails = async () => {
-try {
-    const response = await axios.get(`/api/finances/${userId}/finance-details/`);
-    setFinanceData(response.data.finance || []);
-} catch (error) {
-    console.error(error);
-}
-};
+  const fetchFinanceDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/api/finances/${userId}/finance-details/`);
+      
+      // Set the finance data directly from the response
+      if (response.data.finance) {
+        // Sort by date, most recent first
+        const sortedData = response.data.finance.sort((a, b) => 
+          new Date(b.date) - new Date(a.date)
+        );
+        setFinanceData(sortedData);
+      }
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching finance details:', error);
+      setError('Failed to load transaction history');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-return (
-<div className="flex flex-row items-center min-h-screen bg-gray-100">
-    {/* Sidebar */}
-    <div className="h-screen flex flex-col w-64 bg-gray-800 text-white p-6">
-    <div className="text-2xl font-bold mb-10 tracking-wide">Budget Tracker</div>
-    <nav className="flex-1">
-        <ul className="space-y-3">
-        <li>
-            <a href="/dashboard" className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-            Dashboard
-            </a>
-        </li>
-        <li>
-            <a href="#" className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-            Budget
-            </a>
-        </li>
-        <li>
-            <a href="#" className="block w-full px-4 py-2 rounded-md bg-orange-700 font-semibold">
-            Transaction History
-            </a>
-        </li>
-        <li>
-            <a href="#" className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-            Reports
-            </a>
-        </li>
-        </ul>
-    </nav>
-    <div className="pt-6">
-        <button className="w-full bg-red-600 hover:bg-red-500 transition-colors text-white py-2 rounded-md font-semibold">
-        Log Out
-        </button>
-    </div>
-    </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-    {/* Main Content */}
-    <div className="h-full w-full flex justify-center items-center">
-    <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
-        <h1 className="text-2xl font-bold mb-4">Transaction History</h1>
+  if (error) {
+    return (
+      <div className="text-red-500 text-center p-4">
+        {error}
+      </div>
+    );
+  }
 
-        <div className="bg-gray-800 p-4 rounded-lg h-[500px] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-2">Finance History: </h3>
-        <table className="w-full text-sm text-left">
-            <thead>
-            <tr>
-                <th className="px-2 py-1">Category</th>
-                <th className="px-2 py-1">Amount</th>
-                <th className="px-2 py-1">Date</th>
-            </tr>
-            </thead>
-            <tbody>
-            {financeData.map((item, index) => (
-                <tr key={index}>
-                <td className="px-2 py-1">{item.category}</td>
-                <td className="px-2 py-1">{item.amount}</td>
-                <td className="px-2 py-1">{item.date}</td>
-                </tr>
-            ))}
-            </tbody>
-        </table>
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Transaction History</h1>
         </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+              <tr>
+                <th className="px-4 py-3 rounded-tl-lg">Type</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3 rounded-tr-lg">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {financeData.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
+                    No transactions found
+                  </td>
+                </tr>
+              ) : (
+                financeData.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {item.type === 'income' ? (
+                          <div className="p-2 rounded-lg bg-green-500/20">
+                            <ArrowUpRight className="h-4 w-4 text-green-500" />
+                          </div>
+                        ) : (
+                          <div className="p-2 rounded-lg bg-red-500/20">
+                            <ArrowDownRight className="h-4 w-4 text-red-500" />
+                          </div>
+                        )}
+                        <span>{item.type === 'income' ? 'Income' : 'Expense'}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">{item.category || (item.type === 'income' ? 'Income' : 'Expense')}</td>
+                    <td className={`px-4 py-3 font-medium ${
+                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {new Date(item.date).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
-    </div>
-</div>
-);
+  );
 }   

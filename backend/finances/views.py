@@ -22,6 +22,7 @@ class AddIncomeView(APIView):
     def post(self, request):
         user_id = request.data.get('user_id')
         income_amount = request.data.get('income')
+        category = request.data.get('category', 'Income')  # default to 'Income' if not provided
         date = request.data.get('date')
 
         if not all([user_id, income_amount, date]):
@@ -33,6 +34,7 @@ class AddIncomeView(APIView):
             income = Income.objects.create(
                 user=user,
                 income=income_amount,
+                category=category,
                 date=date
             )
             return Response({'message': 'Income added successfully', 'income_id': income.id}, status=status.HTTP_201_CREATED)

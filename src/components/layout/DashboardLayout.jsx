@@ -18,9 +18,8 @@ const DashboardLayout = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Finance Details', href: '/finance-details', icon: Wallet },
-    { name: 'Reports', href: '/reports', icon: BarChart2 },
     { name: 'History', href: '/history', icon: History },
+    { name: 'Reports', href: '/reports', icon: BarChart2 },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 

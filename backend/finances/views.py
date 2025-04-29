@@ -22,6 +22,8 @@ class AddIncomeView(APIView):
         user_id = request.data.get('user_id')
         income_amount = request.data.get('income')
         date = request.data.get('date')
+        title = request.data.get('title', 'Untitled')  # default to 'Untitled' if not provided
+        description = request.data.get('description')  # can be None
 
         if not all([user_id, income_amount, date]):
             return Response({'error': 'user_id, income, and date are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -32,7 +34,9 @@ class AddIncomeView(APIView):
             income = Income.objects.create(
                 user=user,
                 income=income_amount,
-                date=date
+                date=date,
+                title=title,
+                description=description
             )
             return Response({'message': 'Income added successfully', 'income_id': income.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -44,6 +48,8 @@ class AddExpenseView(APIView):
         expense_amount = request.data.get('expense')
         category = request.data.get('category', 'expenses')  # default to 'expenses' if not provided
         date = request.data.get('date')
+        title = request.data.get('title', 'Untitled')  # default to 'Untitled' if not provided
+        description = request.data.get('description')  # can be None
 
         if not all([user_id, expense_amount, date]):
             return Response({'error': 'user_id, expense, and date are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -55,7 +61,9 @@ class AddExpenseView(APIView):
                 user=user,
                 expense=expense_amount,
                 category=category,
-                date=date
+                date=date,
+                title=title,
+                description=description
             )
             return Response({'message': 'Expense added successfully', 'expense_id': expense.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -107,6 +115,8 @@ def finance_details(request, user_id):
             'type': 'income',
             'category': income.category,
             'amount': float(income.income),
+            'title':income.title,
+            'description':income.description,
             'date': income.date.isoformat(),  # send date as string
         })
 
@@ -115,7 +125,9 @@ def finance_details(request, user_id):
             'type': 'expense',
             'category': expense.category,
             'amount': float(expense.expense) * -1,  # Expenses are negative
-            'date': expense.date.isoformat(),
+            'title':expense.title,
+            'description':expense.description,
+            'date': expense.date.isoformat(),  # send date as string
         })
 
     # Sort by date ascending

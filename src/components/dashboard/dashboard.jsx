@@ -21,6 +21,8 @@ export default function Dashboard() {
   const [financeData, setFinanceData] = useState([]);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [title, setTitle] = useState('');  // Title state
+  const [description, setDescription] = useState(''); 
 
   useEffect(() => {
     // Set user ID
@@ -29,6 +31,8 @@ export default function Dashboard() {
       setUserId(storedUserId);
     }
 
+    
+
     // Set start and end date to current month
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -36,6 +40,12 @@ export default function Dashboard() {
 
     setStartDate(firstDay.toISOString().split('T')[0]);
     setEndDate(lastDay.toISOString().split('T')[0]);
+  }, []);
+
+  useEffect(() => {
+    // Set today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];  // Getting the date part
+    setDate(today);  // Set the date state to today's date
   }, []);
 
   useEffect(() => {
@@ -75,6 +85,9 @@ export default function Dashboard() {
       setMessage('Please fill in income and date.');
       return;
     }
+
+    const incomeTitle = title || 'Untitled';
+    const incomeDescription = description || null;
     
 
     try {
@@ -82,12 +95,16 @@ export default function Dashboard() {
         user_id: userId,
         income: income,
         date: date,
+        title: title,
+        description: description,
       });
       setMessage(response.data.message || 'Income added successfully!');
       setMessageType('income')
       setTimeout(() => setMessage(''), 3000);
       setIncome('');
       setDate('');
+      setTitle('');  // Reset title input
+      setDescription('');  // Reset description input
       setShowIncomeForm(false);
       fetchBudget();
       fetchFinanceDetails();
@@ -104,11 +121,16 @@ export default function Dashboard() {
       return;
     }
 
+    const incomeTitle = title || 'Untitled';
+    const incomeDescription = description || null;
+
     try {
       const response = await axios.post('/api/finances/add-expense/', {
         user_id: userId,
         expense: expense,
         category: category || 'expenses',
+        title: title,
+        description: description,
         date: date,
       });
       setMessage(response.data.message || 'Expense added successfully!');
@@ -117,6 +139,8 @@ export default function Dashboard() {
       setExpense('');
       setCategory('');
       setDate('');
+      setTitle('');  // Reset title input
+      setDescription('');  // Reset description input
       setShowExpenseForm(false);
       fetchBudget();
       fetchFinanceDetails();
@@ -298,6 +322,28 @@ export default function Dashboard() {
                 </div>
 
                 <div>
+                  <label className="block text-sm mb-1">Title:</label>
+                  <input
+                    type="text"
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1">Description:</label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm mb-1">Date:</label>
                   <input
                     type="date"
@@ -347,11 +393,39 @@ export default function Dashboard() {
 
                 <div>
                   <label className="block text-sm mb-1">Category:</label>
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white"
+                    >
+                        <option value="">Select category</option>
+                        <option value="food">Food</option>
+                        <option value="bills">Bills</option>
+                        <option value="transport">Transport</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="savings">Savings</option>
+                        <option value="others">Others</option>
+                    </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1">Title:</label>
                   <input
                     type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Enter category (e.g., food, bills)"
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1">Description:</label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="w-full p-2 rounded bg-gray-800 border border-gray-700"
                   />
                 </div>
@@ -390,7 +464,9 @@ export default function Dashboard() {
                 <thead>
                   <tr>
                     <th className="px-2 py-1">Category</th>
+                    <th className="px-2 py-1">Title</th>
                     <th className="px-2 py-1">Amount</th>
+                    <th className="px-2 py-1">Description</th>
                     <th className="px-2 py-1">Date</th>
                   </tr>
                 </thead>
@@ -398,7 +474,9 @@ export default function Dashboard() {
                   {financeData.map((item, index) => (
                     <tr key={index}>
                       <td className="px-2 py-1">{item.category}</td>
+                      <td className="px-2 py-1">{item.title}</td>
                       <td className="px-2 py-1">{item.amount}</td>
+                      <td className="px-2 py-1">{item.description}</td>
                       <td className="px-2 py-1">{item.date}</td>
                     </tr>
                   ))}

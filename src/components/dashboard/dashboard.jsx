@@ -158,24 +158,32 @@ export default function Dashboard() {
 
   return (
     
-    <div className="flex flex-row items-center  min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       <Sidebar active="dashboard" />
 
-    <div className="h-full w-full flex justify-center items-center">
+    <div className="flex-1 ml-16 md:ml-64 p-6 flex justify-center items-center overflow-hidden">
     <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Left Section - Budget Summary (Narrower) */}
-        <div className="flex flex-col h-[500px] w-full md:w-1/3 justify-between border border-black p-4">
+        <div className="flex flex-col h-auto w-full md:w-1/3 justify-between border border-black p-4">
           {/* Top Section: Budget Summary */}
           <div>
             {budgetResult && (
-              <div className="bg-gray-800 p-4 rounded-lg mb-6">
-                <h3 className="text-lg font-semibold mb-2">Budget Summary (This Month):</h3>
-                <p>Total Income: ₱{budgetResult.total_income}</p>
-                <p>Total Expense: ₱{budgetResult.total_expense}</p>
-                <p>Remaining Budget: ₱{budgetResult.budget}</p>
+              <div className="bg-gray-800 p-4 rounded-lg mb-6 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto ">
+                <h3 className="font-semibold mb-2" style={{ fontSize: 'clamp(1rem, 1.5vw, 2rem)' }}>
+                  Budget Summary (This Month):
+                </h3>
+                <p style={{ fontSize: 'clamp(0.8rem, .4vw, 1rem)' }}>
+                  Total Income: ₱{budgetResult.total_income}
+                </p>
+                <p style={{ fontSize: 'clamp(0.8rem, .4vw, 1rem)' }}>
+                  Total Expense: ₱{budgetResult.total_expense}
+                </p>
+                <p style={{ fontSize: 'clamp(0.8rem, .4vw, 1rem)' }}>
+                  Remaining Budget: ₱{budgetResult.budget}
+                </p>
               </div>
             )}
           </div>
@@ -195,7 +203,7 @@ export default function Dashboard() {
                 </p>
               </div>
             )}
-            <div className="flex flex-row md:flex-row gap-4 items-center justify-center mt-auto">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-center mt-auto">
               
               <button 
                 onClick={() => {

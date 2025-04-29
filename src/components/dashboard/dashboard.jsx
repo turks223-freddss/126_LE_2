@@ -4,6 +4,7 @@ import axios from 'axios';
 import FinanceDetails from './financeDetails';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from './sidebar';
 
 export default function Dashboard() {
   const { logout } = useAuth();
@@ -158,60 +159,8 @@ export default function Dashboard() {
   return (
     
     <div className="flex flex-row items-center  min-h-screen bg-gray-100">
-      <div className=" h-screen flex flex-col w-64 bg-gray-800 text-white p-6">
-        {/* Title */}
-        <div className="text-2xl font-bold mb-10 tracking-wide">
-          Budget Tracker
-        </div>
+      <Sidebar active="dashboard" />
 
-        {/* Navigation */}
-        <nav className="flex-1">
-          <ul className="space-y-3">
-            <li>
-              <a
-                href="#"
-                className="block w-full px-4 py-2 rounded-md bg-orange-700 font-semibold "
-              >
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Budget
-              </a>
-            </li>
-            <li>
-              <Link
-                to="/history"
-                className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Transaction History
-              </Link>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="block w-full px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Reports
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Log Out Button */}
-        <div className="pt-6">
-          <button 
-            onClick={handleLogout}
-            className="w-full bg-red-600 hover:bg-red-500 transition-colors text-white py-2 rounded-md font-semibold"
-          >
-            Log Out
-          </button>
-        </div>
-      </div>
     <div className="h-full w-full flex justify-center items-center">
     <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>

@@ -15,6 +15,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -23,4 +24,30 @@ dist-ssr
 *.sln
 *.sw?
 
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Vite build
+dist/
+.vite/
+*.tgz
+
 venv/
+db.sqlite3
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.db
+
+# Django migrations
+**/migrations/*.pyc
+**/migrations/*.pyo
+**/migrations/*.py
+
+.env
+*.env

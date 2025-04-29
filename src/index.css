@@ -1,20 +1,14 @@
 @import "tailwindcss";
 
+/* Base styles that aren't theme-dependent */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -24,10 +18,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
 }
 
 @keyframes fadeInOut {
@@ -49,11 +39,13 @@
   }
 }
 
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
 .animate-fade-in-out {
   animation: fadeInOut 3s ease-in-out forwards;
 }
-
-
 
 /*
 a {

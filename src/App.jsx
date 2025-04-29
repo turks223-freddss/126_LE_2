@@ -6,6 +6,7 @@ import './App.css'
 import Dashboard from './components/dashboard/dashboard';
 import FinanceDetails from './components/dashboard/financeDetails';
 import THistory from './components/dashboard/history';
+import Reports from './components/dashboard/reports';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/finance-details" element={<FinanceDetails />} />
       <Route path="/history" element={<THistory />} />
+      <Route path="/reports" element={<Reports />} />
       {/* Add more routes here, e.g. dashboard, home, etc. */}
     </Routes>
   );

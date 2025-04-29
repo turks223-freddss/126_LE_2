@@ -13,6 +13,7 @@ export default function TransactionHistory() {
   const [incomeList, setIncomeList] = useState([]);
   const [editingIncomeId, setEditingIncomeId] = useState(null);
   const [editedIncome, setEditedIncome] = useState({category: '',title: '',income: '',description: '',date: '',});
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
 
 
@@ -31,6 +32,11 @@ export default function TransactionHistory() {
       handleFetchIncome();
     }
   }, [userId]);
+
+  const filterByCategory = (entries, category) => {
+    if (!category || category === 'all') return entries;
+    return entries.filter(entry => entry.category === category);
+  };
 
   const fetchFinanceDetails = async () => {
     try {
@@ -221,7 +227,21 @@ export default function TransactionHistory() {
               </button> */}
         
               {error && <p className="text-red-400 mb-2">{error}</p>}
-        
+              <div className="mb-4">
+                <label className="mr-2 text-white">Filter by Category:</label>
+                <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="bg-gray-700 text-white px-2 py-1 rounded"
+                >
+                    <option value="all">All</option>
+                    <option value="food">Food</option>
+                    <option value="bills">Bills</option>
+                    <option value="transport">Transport</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="other">Other</option>
+                </select>
+                </div>
               <table className="w-full text-sm text-left table-auto border border-gray-700">
                 <thead>
                   <tr className="bg-gray-700">
@@ -235,7 +255,7 @@ export default function TransactionHistory() {
                   </tr>
                 </thead>
                 <tbody>
-                  {expenseList.map((item) => (
+                  {filterByCategory(expenseList,selectedCategory).map((item) => (
                     <tr key={item.id} className="border border-gray-700">
                       {editingId === item.id ? (
                         <>

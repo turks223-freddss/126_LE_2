@@ -34,76 +34,70 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 p-6">
-            <div className="text-center mb-6">
-                <h1 className="text-4xl text-gray-900 font-extrabold">Budget Tracker</h1>
-                <hr className="border-t-2 border-black mx-auto w-32" />
-            </div>
-            <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-                <h2 className="text-2xl text-center font-semibold text-gray-900 mb-6">Sign in to your account</h2>
+        <div className="w-full">
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-6">
+                    {error}
+                </div>
+            )}
 
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-6">
-                        {error}
-                    </div>
-                )}
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-5">
+                    <Input
+                        label="Email address"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        required
+                        autoComplete="email"
+                        className="py-3 px-4 block w-full rounded-lg text-base"
+                    />
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                        <Input
-                            label="Email address"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
-                            required
-                            autoComplete="email"
-                        />
+                    <Input
+                        label="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        required
+                        showPasswordToggle
+                        autoComplete="current-password"
+                        className="py-3 px-4 block w-full rounded-lg text-base"
+                    />
+                </div>
 
-                        <Input
-                            label="Password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                            required
-                            showPasswordToggle
-                            autoComplete="current-password"
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <div className="text-sm">
-                            <Link
-                                to="/password-reset"
-                                className="font-medium text-blue-600 hover:text-blue-500"
-                            >
-                                Forgot your password?
-                            </Link>
-                        </div>
-                    </div>
-
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        size="lg"
-                        isLoading={isLoading}
-                        className="w-full"
-                    >
-                        Sign in
-                    </Button>
-
-                    <div className="text-center text-sm">
-                        <span className="text-gray-500">Don't have an account?</span>{' '}
+                <div className="flex items-center justify-between">
+                    <div className="text-sm">
                         <Link
-                            to="/register"
-                            className="font-medium text-blue-600 hover:text-blue-500"
+                            to="/password-reset"
+                            className="font-medium text-blue-500 hover:text-blue-400 transition-colors"
                         >
-                            Sign up
+                            Forgot your password?
                         </Link>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    isLoading={isLoading}
+                    className="w-full py-3 text-base font-semibold"
+                >
+                    Sign in
+                </Button>
+
+                <div className="text-center text-sm">
+                    <span className="text-gray-400">Don't have an account?</span>{' '}
+                    <Link
+                        to="/register"
+                        className="font-medium text-blue-500 hover:text-blue-400 transition-colors"
+                    >
+                        Sign up
+                    </Link>
+                </div>
+            </form>
         </div>
     );
 };

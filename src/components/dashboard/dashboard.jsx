@@ -344,7 +344,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {financeData.map((item, index) => (
+                  {financeData.slice().reverse().map((item, index) => (
                     <tr key={index}>
                       <td className="px-2 py-1">{item.category}</td>
                       <td className="px-2 py-1">{item.amount}</td>

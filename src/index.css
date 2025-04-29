@@ -8,6 +8,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Theme transition */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
 /* Global animations */
 @keyframes fadeIn {
   from {

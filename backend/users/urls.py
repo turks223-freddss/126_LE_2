@@ -5,7 +5,8 @@ from .views import (
     UserLogoutView,
     PasswordResetView,
     PasswordResetConfirmView,
-    get_csrf_token
+    get_csrf_token,
+    get_user_details
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('password-reset/', PasswordResetView.as_view(), name='password-reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('csrf/', get_csrf_token, name='csrf'),
+    path('me/', get_user_details, name='user-details'),
 ] 

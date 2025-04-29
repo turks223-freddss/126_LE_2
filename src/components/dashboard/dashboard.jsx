@@ -1,381 +1,287 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
-import FinanceDetails from './financeDetails';
 import { useAuth } from '../../contexts/AuthContext';
+
+import { useFinance } from '../../contexts/FinanceContext';
+import { Plus, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Doughnut, Bar } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './sidebar';
+import BudgetSummary from './BudgetSummary';
+import TransactionForm from './TransactionForm';
+import TransactionHistory from './TransactionHistory';
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+);
+
 
 export default function Dashboard() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { triggerUpdate } = useFinance();
   const [userId, setUserId] = useState(null);
-  const [income, setIncome] = useState('');
-  const [expense, setExpense] = useState('');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState('');
+  const [showForm, setShowForm] = useState(null);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [budgetResult, setBudgetResult] = useState(null);
-  const [financeData, setFinanceData] = useState([]);
-  const [showIncomeForm, setShowIncomeForm] = useState(false);
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [budgetData, setBudgetData] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    remainingBudget: 0
+  });
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    // Set user ID
     const storedUserId = localStorage.getItem('user_id');
     if (storedUserId) {
       setUserId(storedUserId);
+      fetchData(storedUserId);
     }
+  }, []);
 
-    // Set start and end date to current month
+  const getCurrentMonthDates = () => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return {
+      start: firstDay.toISOString().split('T')[0],
+      end: lastDay.toISOString().split('T')[0]
+    };
+  };
 
-    setStartDate(firstDay.toISOString().split('T')[0]);
-    setEndDate(lastDay.toISOString().split('T')[0]);
-  }, []);
-
-  useEffect(() => {
-    if (userId && startDate && endDate) {
-      fetchBudget();
-      fetchFinanceDetails();
-    }
-  }, [userId, startDate, endDate]);
-
-  const fetchBudget = async () => {
+  const fetchData = async (userId) => {
     try {
-      const response = await axios.post('/api/finances/budget/', {
+      const { start, end } = getCurrentMonthDates();
+      
+      // Fetch budget summary for current month
+      const budgetResponse = await axios.post('/api/finances/budget/', {
         user_id: userId,
-        start_date: startDate,
-        end_date: endDate,
+        start_date: start,
+        end_date: end
       });
-      setBudgetResult(response.data);
+      
+      setBudgetData({
+        totalIncome: budgetResponse.data.total_income || 0,
+        totalExpense: budgetResponse.data.total_expense || 0,
+        remainingBudget: budgetResponse.data.budget || 0
+      });
+
+      // Fetch transactions
+      const financeResponse = await axios.get(`/api/finances/${userId}/finance-details/`);
+      
+      if (financeResponse.data.finance) {
+        // Sort by date, most recent first
+        const sortedTransactions = financeResponse.data.finance.sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+        setTransactions(sortedTransactions);
+      }
     } catch (error) {
-      console.error(error);
-      setMessage('Failed to fetch budget.');
+      console.error('Error fetching data:', error);
+      setMessage('Failed to fetch data');
+      setMessageType('error');
     }
   };
 
-  const fetchFinanceDetails = async () => {
+  const handleTransaction = async (formData) => {
     try {
-      const response = await axios.get(`/api/finances/${userId}/finance-details/`);
-      setFinanceData(response.data.finance || []);
-    } catch (error) {
-      console.error(error);
-      setMessage('Failed to fetch finance details.');
-    }
-  };
-
-  const handleAddIncome = async (e) => {
-    e.preventDefault();
-    if (!income || !date) {
-      setMessage('Please fill in income and date.');
-      return;
-    }
-    
-
-    try {
-      const response = await axios.post('/api/finances/add-income/', {
+      const endpoint = showForm === 'income' ? '/api/finances/add-income/' : '/api/finances/add-expense/';
+      const payload = {
         user_id: userId,
-        income: income,
-        date: date,
-      });
-      setMessage(response.data.message || 'Income added successfully!');
-      setMessageType('income')
+        category: formData.category || (showForm === 'income' ? 'Income' : 'Expense'),
+        date: formData.date
+      };
+
+      if (showForm === 'income') {
+        payload.income = parseFloat(formData.amount);
+      } else {
+        payload.expense = parseFloat(formData.amount);
+      }
+
+      const response = await axios.post(endpoint, payload);
+
+      setMessage(response.data.message || `${showForm} added successfully!`);
+      setMessageType('success');
+      setShowForm(null);
+      
+      // Refresh data
+      await fetchData(userId);
+      // Trigger update for other components
+      triggerUpdate();
+
       setTimeout(() => setMessage(''), 3000);
-      setIncome('');
-      setDate('');
-      setShowIncomeForm(false);
-      fetchBudget();
-      fetchFinanceDetails();
     } catch (error) {
-      console.error(error);
-      setMessage('Failed to add income.');
+      console.error('Error adding transaction:', error);
+      setMessage(`Failed to add ${showForm}`);
+      setMessageType('error');
     }
   };
 
-  const handleAddExpense = async (e) => {
-    e.preventDefault();
-    if (!expense || !date) {
-      setMessage('Please fill in expense, category, and date.');
-      return;
-    }
-
-    try {
-      const response = await axios.post('/api/finances/add-expense/', {
-        user_id: userId,
-        expense: expense,
-        category: category || 'expenses',
-        date: date,
-      });
-      setMessage(response.data.message || 'Expense added successfully!');
-      setMessageType('expense')
-      setTimeout(() => setMessage(''), 3000);
-      setExpense('');
-      setCategory('');
-      setDate('');
-      setShowExpenseForm(false);
-      fetchBudget();
-      fetchFinanceDetails();
-    } catch (error) {
-      console.error(error);
-      setMessage('Failed to add expense.');
-    }
+  // Chart data
+  const doughnutData = {
+    labels: ['Income', 'Expenses', 'Remaining'],
+    datasets: [{
+      data: [
+        budgetData.totalIncome,
+        budgetData.totalExpense,
+        budgetData.remainingBudget
+      ],
+      backgroundColor: [
+        '#4BC0C0',  // Income - Teal
+        '#FF6384',  // Expenses - Red
+        '#36A2EB',  // Remaining - Blue
+      ],
+      borderWidth: 0,
+    }]
   };
 
-  const toggleIncomeForm = () => {
-    setShowIncomeForm(true);
-    setShowExpenseForm(false);
-    setDate('');
-  };
-
-  const toggleExpenseForm = () => {
-    setShowExpenseForm(true);
-    setShowIncomeForm(false);
-    setDate('');
-  };
-
-  const InviIncomeForm = () => {
-    setShowIncomeForm(false)
-  }
-
-  const InviExpenseForm = () => {
-    setShowExpenseForm(false)
-  }
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          font: {
+            size: 12
+          }
+        }
+      }
+    },
+    cutout: '70%'
   };
 
   return (
-    
-
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar active="dashboard" />
-
-    <div className="flex-1 ml-16 md:ml-64 p-6 flex justify-center items-center overflow-hidden">
-    <div className="bg-black justify-center p-10 rounded-xl shadow-lg text-white w-full max-w-6xl">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left Section - Budget Summary (Narrower) */}
-        <div className="flex flex-col h-auto w-full md:w-1/3 justify-between border border-black p-4">
-          {/* Top Section: Budget Summary */}
-          <div>
-            {budgetResult && (
-              <div className="bg-gray-800 p-4 rounded-lg mb-6 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto ">
-                <h3 className="font-semibold mb-2" style={{ fontSize: 'clamp(1rem, 1.5vw, 2rem)' }}>
-                  Budget Summary (This Month):
-                </h3>
-                <p style={{ fontSize: 'clamp(0.8rem, .4vw, 1rem)' }}>
-                  Total Income: ₱{budgetResult.total_income}
-                </p>
-                <p style={{ fontSize: 'clamp(0.8rem, .4vw, 1rem)' }}>
-                  Total Expense: ₱{budgetResult.total_expense}
-                </p>
-                <p style={{ fontSize: 'clamp(0.8rem, .4vw, 1rem)' }}>
-                  Remaining Budget: ₱{budgetResult.budget}
-                </p>
-              </div>
-            )}
-          </div>
-          
-          {/* Bottom Section: Add Buttons */}
-          <div className="flex flex-col space-y-3">
-            {message && (
-              <div className="mt-4 flex justify-center">
-                  <p
-                    className={`${
-                      messageType === 'expense'
-                        ? 'bg-red-500 border-red-700'
-                        : 'bg-green-500 border-green-700'
-                    } text-white font-semibold py-2 px-6 rounded-lg shadow-lg border animate-fade-in-out`}
-                  >
-                  {message}
-                </p>
-              </div>
-            )}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-center mt-auto">
-              
-              <button 
-                onClick={() => {
-                  toggleIncomeForm();
-                  if (showExpenseForm) InviExpenseForm(); 
-                }}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded transition-transform duration-200 transform hover:scale-105 w-48"
-              >
-                Add Income
-              </button>
-              
-              <button 
-                onClick={() => {
-                  toggleExpenseForm();
-                  if (showIncomeForm) InviIncomeForm(); 
-                }}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded transition-transform duration-200 transform hover:scale-105 w-48"
-              >
-                Add Expense
-              </button>
-            </div>
-          </div>
-
-          
+    <div className="space-y-8 p-6">
+      {/* Message Toast */}
+      {message && (
+        <div className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+          messageType === 'success' ? 'bg-green-600' : 'bg-red-600'
+        } text-white animate-fade-in-out z-50`}>
+          {message}
         </div>
+      )}
 
-        {/* Right Section - Transaction History*/}
-        <div className="w-full md:w-2/3">
-          {showIncomeForm && (
-            <div className="bg-gray-800 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-semibold mb-2">Add Income</h3>
-              
-              <form 
-                onSubmit={(e) => {
-                  handleAddIncome(e);
-                  toggleIncomeForm(); 
-                }}
-                className="flex flex-col gap-4"
-              >
-                <div>
-                  <label className="block text-sm mb-1">Income Amount:</label>
-                  <input
-                    type="number"
-                    value={income}
-                    onChange={(e) => setIncome(e.target.value)}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    required
-                  />
-                </div>
+      {/* Budget Summary */}
+      <BudgetSummary
+        totalIncome={budgetData.totalIncome}
+        totalExpense={budgetData.totalExpense}
+        remainingBudget={budgetData.remainingBudget}
+      />
 
-                <div>
-                  <label className="block text-sm mb-1">Date:</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-between mt-4">
-                  <button type="submit" className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-                    Submit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => InviIncomeForm()}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {showExpenseForm && (
-            <div className="bg-gray-800 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-semibold mb-2">Add Expense</h3>
-              <form 
-                onSubmit={(e) => {
-                  handleAddExpense(e);
-                  toggleExpenseForm(); 
-                }} 
-                className="flex flex-col gap-4"
-              >
-                <div>
-                  <label className="block text-sm mb-1">Expense Amount:</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={expense}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '' || /^\d+$/.test(value)) {
-                        setExpense(value);
-                      }
-                    }}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Category:</label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Enter category (e.g., food, bills)"
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Date:</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-between mt-4">
-                  <button type="submit" className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-                    Submit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => InviExpenseForm()}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {!showIncomeForm && !showExpenseForm && financeData.length > 0 && (
-            <div className="bg-gray-800 p-4 rounded-lg h-[500px] overflow-y-auto">
-              <h3 className="text-lg font-semibold mb-2">Finance History: </h3>
-              <table className="w-full text-sm text-left">
-                <thead>
-                  <tr>
-                    <th className="px-2 py-1">Category</th>
-                    <th className="px-2 py-1">Amount</th>
-                    <th className="px-2 py-1">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {financeData.slice().reverse().map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-2 py-1">{item.category}</td>
-                      <td className="px-2 py-1">{item.amount}</td>
-                      <td className="px-2 py-1">{item.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <button
+          onClick={() => setShowForm('income')}
+          className="flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors"
+        >
+          <Plus className="h-5 w-5" />
+          Add Income
+        </button>
+        <button
+          onClick={() => setShowForm('expense')}
+          className="flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors"
+        >
+          <Plus className="h-5 w-5" />
+          Add Expense
+        </button>
+        <Link
+          to="/history"
+          className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors ml-auto"
+        >
+          <History className="h-5 w-5" />
+          View History
+        </Link>
       </div>
 
-    </div>
-    </div>    
+      {/* Transaction Form Modal */}
+      {showForm && (
+        <TransactionForm
+          type={showForm}
+          onSubmit={handleTransaction}
+          onCancel={() => setShowForm(null)}
+        />
+      )}
+
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Transactions */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
+          <div className="overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {transactions.slice(0, 5).map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {item.type === 'income' ? (
+                          <div className="p-1.5 rounded-lg bg-green-100">
+                            <ArrowUpRight className="h-4 w-4 text-green-600" />
+                          </div>
+                        ) : (
+                          <div className="p-1.5 rounded-lg bg-red-100">
+                            <ArrowDownRight className="h-4 w-4 text-red-600" />
+                          </div>
+                        )}
+                        <span className="capitalize">{item.type}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{item.category}</td>
+                    <td className={`px-4 py-3 font-medium ${
+                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {new Date(item.date).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Financial Summary Charts */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold mb-4">Financial Summary</h2>
+          <div className="h-[300px] flex items-center justify-center">
+            <Doughnut data={doughnutData} options={chartOptions} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-sm text-gray-500">Income</p>
+              <p className="text-lg font-semibold text-green-600">${budgetData.totalIncome}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Expenses</p>
+              <p className="text-lg font-semibold text-red-600">${budgetData.totalExpense}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Remaining</p>
+              <p className="text-lg font-semibold text-blue-600">${budgetData.remainingBudget}</p>
+
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

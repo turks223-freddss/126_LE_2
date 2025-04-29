@@ -10,13 +10,16 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse
-
+from rest_framework.decorators import api_view, permission_classes
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
     PasswordResetSerializer,
-    PasswordResetConfirmSerializer
+    PasswordResetConfirmSerializer,
+    UserSerializer
 )
+import jwt
+from datetime import datetime, timedelta
 
 User = get_user_model()
 
@@ -114,3 +117,12 @@ class PasswordResetConfirmView(APIView):
 @ensure_csrf_cookie
 def get_csrf_token(request):
     return JsonResponse({'detail': 'CSRF cookie set'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_details(request):
+    """
+    Get details of the currently authenticated user
+    """
+    serializer = UserSerializer(request.user)
+    return Response(serializer.data)

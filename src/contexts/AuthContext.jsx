@@ -3,6 +3,7 @@ import axios from 'axios';
 
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
 
@@ -12,26 +13,27 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        axios.get('/api/csrf/');
-        const token = localStorage.getItem('token');
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-            // Fetch user data
-            axios.get('/api/users/me/')
-                .then(response => {
-                    setUser(response.data);
-                })
-                .catch(() => {
-                    localStorage.removeItem('token');
-                    delete axios.defaults.headers.common['Authorization'];
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        } else {
+    const checkAuth = async () => {
+        try {
+            await axios.get('/api/csrf/');
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+                const response = await axios.get('/api/users/me/');
+                setUser(response.data);
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
+            setUser(null);
+        } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        checkAuth();
     }, []);
 
     const register = async (userData) => {
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post('/api/users/register/', userData);
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error.response?.data || { message: 'Registration failed' };
         }
     };
 
@@ -49,35 +51,23 @@ export const AuthProvider = ({ children }) => {
             const { token } = response.data;
             localStorage.setItem('token', token);
             axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-            setUser(response.data.user);
+            await checkAuth(); // Fetch user details after login
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error.response?.data || { message: 'Login failed' };
         }
     };
 
     const logout = async () => {
         try {
-            // Get the current token
             const token = localStorage.getItem('token');
-            if (!token) {
-                // If no token, just clear everything
-                setUser(null);
-                return;
-            }
-
-            // Ensure token is in headers
-            axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-            
-            try {
-                // Try to make the logout request
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Token ${token}`;
                 await axios.post('/api/users/logout/');
-            } catch (error) {
-                // Log the error but continue with cleanup
-                console.error('Server logout error:', error);
             }
+        } catch (error) {
+            console.error('Logout error:', error);
         } finally {
-            // Always clean up local state
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
             setUser(null);
@@ -89,7 +79,7 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post('/api/users/password-reset/', { email });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error.response?.data || { message: 'Password reset request failed' };
         }
     };
 
@@ -101,7 +91,7 @@ export const AuthProvider = ({ children }) => {
             });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error.response?.data || { message: 'Password reset failed' };
         }
     };
 

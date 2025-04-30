@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
-import { ArrowUpRight, ArrowDownRight, Filter, Download,Edit, Trash } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Filter, Download,Edit, Trash, Check, X } from 'lucide-react';
 
 export default function History() {
   const { user } = useAuth();
@@ -92,11 +92,14 @@ export default function History() {
   };
 
   const handleDelete = async (userId, entryId, entryType) => {
+    const confirmed = window.confirm(`Are you sure you want to delete this ${entryType} entry?`);
+  
+    if (!confirmed) return;
+  
     try {
       const response = await axios.delete(`/api/finances/delete/${userId}/${entryId}/`, {
         data: { type: entryType }
       });
-      
   
       if (response.status === 204) {
         alert(`${entryType} entry deleted successfully.`);
@@ -104,11 +107,11 @@ export default function History() {
         alert(`Error: ${response.data.error}`);
       }
     } catch (error) {
-      
       alert('Something went wrong while deleting the entry.');
       console.error(error);
     }
   };
+  
 
   const handleUpdate = async (userId, entryId, entryType, updatedData, onSuccess) => {
     try {
@@ -333,106 +336,117 @@ export default function History() {
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 rounded-tl-lg">Type</th>
+              <th className="px-4 py-3">Category</th>
+              <th className="px-4 py-3">Title</th>
+              <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Description</th>
+              <th className="px-4 py-3 rounded-tr-lg">Date</th>
+              <th className="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {financeData.length === 0 ? (
               <tr>
-                <th className="px-4 py-3 rounded-tl-lg">Type</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Amount</th>
-                <th className="px-4 py-3">description</th>
-                <th className="px-4 py-3 rounded-tr-lg">Date</th>
-                <th className="px-4 py-3">Actions</th>
+                <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
+                  No transactions found
+                </td>
               </tr>
-
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {financeData.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
-                    No transactions found
+            ) : (
+              financeData.map((item) => (
+                <tr
+                  key={item.id}
+                  className={`transition-all duration-300 ${editId === item.id ? 'bg-orange-200' : 'hover:bg-orange-50'}`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {item.type === 'income' ? (
+                        <div className="p-2 rounded-lg bg-green-500/20">
+                          <ArrowUpRight className="h-4 w-4 text-green-500" />
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-lg bg-red-500/20">
+                          <ArrowDownRight className="h-4 w-4 text-red-500" />
+                        </div>
+                      )}
+                      <span>{item.type === 'income' ? 'Income' : 'Expense'}</span>
+                    </div>
                   </td>
-                </tr>
-              ) : (
-                financeData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {item.type === 'income' ? (
-                          <div className="p-2 rounded-lg bg-green-500/20">
-                            <ArrowUpRight className="h-4 w-4 text-green-500" />
-                          </div>
-                        ) : (
-                          <div className="p-2 rounded-lg bg-red-500/20">
-                            <ArrowDownRight className="h-4 w-4 text-red-500" />
-                          </div>
-                        )}
-                        <span>{item.type === 'income' ? 'Income' : 'Expense'}</span>
-                      </div>
-                    </td>
 
+                  {editId === item.id ? (
+                    <>
+                      <td className="px-4 py-3">
+                        <select
+                          name="category"
+                          className="w-full border rounded px-2 py-1"
+                          value={editForm.category}
+                          onChange={handleChange}
+                        >
+                          {/* Hardcoded categories */}
+                          <option value="">Select...</option>
+                          <option value="Food">Food</option>
+                          <option value="Transport">Transport</option>
+                          <option value="Utilities">Utilities</option>
+                          <option value="Entertainment">Entertainment</option>
+                          <option value="Health">Health</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          name="title"
+                          className="w-full border rounded px-2 py-1"
+                          value={editForm.title}
+                          onChange={handleChange}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          name="amount"
+                          type="number"
+                          className="w-full border rounded px-2 py-1"
+                          value={editForm.amount}
+                          onChange={handleChange}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          name="description"
+                          className="w-full border rounded px-2 py-1"
+                          value={editForm.description}
+                          onChange={handleChange}
+                        />
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3">{item.category}</td>
+                      <td className="px-4 py-3">{item.title}</td>
+                      <td
+                        className={`px-4 py-3 font-medium ${
+                          item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {`${item.type === 'income' ? '+' : '-'}₱${Math.abs(item.amount)}`}
+                      </td>
+                      <td className="px-4 py-3">{item.description}</td>
+                    </>
+                  )}
+
+                  <td className="px-4 py-3 text-gray-600">
+                    {new Date(item.date).toLocaleDateString()}
+                  </td>
+
+                  <td className="px-4 py-3">
                     {editId === item.id ? (
                       <>
-                        <td className="px-4 py-3">
-                          <input
-                            name="category"
-                            className="w-full border rounded px-2 py-1"
-                            value={editForm.category}
-                            onChange={handleChange}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            name="title"
-                            className="w-full border rounded px-2 py-1"
-                            value={editForm.title}
-                            onChange={handleChange}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            name="amount"
-                            type="number"
-                            className="w-full border rounded px-2 py-1"
-                            value={editForm.amount}
-                            onChange={handleChange}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            name="description"
-                            className="w-full border rounded px-2 py-1"
-                            value={editForm.description}
-                            onChange={handleChange}
-                          />
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-4 py-3">{item.category}</td>
-                        <td className="px-4 py-3">{item.title}</td>
-                        <td
-                          className={`px-4 py-3 font-medium ${
-                            item.type === 'income' ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
-                        </td>
-                        <td className="px-4 py-3">{item.description}</td>
-                      </>
-                    )}
-
-                    <td className="px-4 py-3 text-gray-600">
-                      {new Date(item.date).toLocaleDateString()}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {editId === item.id ? (
-                        <>
+                        <div className="flex gap-2">
                           <button
-                            onClick={() =>
-                              {handleUpdate(
+                            onClick={() => {
+                              handleUpdate(
                                 userId,
                                 item.id,
                                 item.type,
@@ -446,45 +460,48 @@ export default function History() {
                                   cancelEditing();
                                   // Optionally refresh financeData here
                                 }
-                              );window.location.reload(); }
-                            }
-                            className="text-green-500 hover:text-green-700 mr-2"
+                              );
+                              window.location.reload();
+                            }}
+                            className="text-green-500 hover:text-white hover:bg-green-500 rounded-full p-1 transition-all duration-200"
                           >
-                            Save
+                            <Check className="h-5 w-5" />
                           </button>
                           <button
                             onClick={cancelEditing}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-red-500 hover:text-white hover:bg-red-500 rounded-full p-1 transition-all duration-200"
                           >
-                            Cancel
+                            <X className="h-5 w-5" />
                           </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => startEditing(item)}
-                            className="text-blue-500 hover:text-blue-700 mr-2"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleDelete(userId, item.id, item.type);
-                              window.location.reload();
-                            }}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash className="h-5 w-5" />
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditing(item)}
+                          className="text-blue-500 hover:text-blue-700 mr-2"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleDelete(userId, item.id, item.type);
+                            window.location.reload();
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
 
       </Card>
     </div>

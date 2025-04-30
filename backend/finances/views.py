@@ -106,33 +106,41 @@ class BudgetCalculatorView(APIView):
         }, status=status.HTTP_200_OK)
         
 def finance_details(request, user_id):
+    # Get query parameters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
     incomes = Income.objects.filter(user_id=user_id)
     expenses = Expense.objects.filter(user_id=user_id)
 
+    # Apply date range filter if provided
+    if start_date and end_date:
+        incomes = incomes.filter(date__range=[start_date, end_date])
+        expenses = expenses.filter(date__range=[start_date, end_date])
+
     combined_data = []
-    
+
     for income in incomes:
         combined_data.append({
             'id': income.id,
             'type': 'income',
             'category': income.category,
             'amount': float(income.income),
-            'title':income.title,
-            'description':income.description,
-            'date': income.date.isoformat(),  # send date as string
+            'title': income.title,
+            'description': income.description,
+            'date': income.date.isoformat(),
         })
-        
+
     for expense in expenses:
         combined_data.append({
             'id': expense.id,
             'type': 'expense',
             'category': expense.category,
-            'amount': float(expense.expense) * -1,  # Expenses are negative
-            'title':expense.title,
-            'description':expense.description,
-            'date': expense.date.isoformat(),  # send date as string
+            'amount': float(expense.expense) * -1,
+            'title': expense.title,
+            'description': expense.description,
+            'date': expense.date.isoformat(),
         })
-        
 
     # Sort by date ascending
     combined_data.sort(key=lambda x: x['date'])

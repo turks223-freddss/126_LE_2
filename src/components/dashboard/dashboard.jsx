@@ -34,9 +34,21 @@ export default function Dashboard() {
     
 
     // Set start and end date to current month
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const now = new Date(); // current date-time
+    const currentMonth = now.getMonth(); // this month
+    const currentYear = now.getFullYear();
+
+    // First day of the current month
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    firstDay.setHours(0, 0, 0, 0);  // explicitly set to start of the day
+    
+    // Last day of the current month
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);  // 0th day of next month = last day of current month
+    lastDay.setHours(23, 59, 59, 999);  // explicitly set to the last moment of the day
+
+    console.log("Now:", now.toISOString()); // 2025-04-30T00:00:18.282Z
+    console.log("First day of month:", firstDay.toISOString()); // should be 2025-04-01T00:00:00.000Z
+    console.log("Last day of month:", lastDay.toISOString()); // should be 2025-04-30T23:59:59.999Z
 
     setStartDate(firstDay.toISOString().split('T')[0]);
     setEndDate(lastDay.toISOString().split('T')[0]);
@@ -57,11 +69,15 @@ export default function Dashboard() {
 
   const fetchBudget = async () => {
     try {
+        console.log("User ID:", userId);
+        console.log("Start Date:", startDate);
+        console.log("End Date:", endDate);
       const response = await axios.post('/api/finances/budget/', {
         user_id: userId,
         start_date: startDate,
         end_date: endDate,
       });
+        
       setBudgetResult(response.data);
     } catch (error) {
       console.error(error);

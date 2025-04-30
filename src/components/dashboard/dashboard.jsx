@@ -48,9 +48,17 @@ export default function Dashboard() {
   }, []);
 
   const getCurrentMonthDates = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const now = new Date(); 
+    const currentMonth = now.getMonth(); // this month
+    const currentYear = now.getFullYear();
+
+    // First day of the current month
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    firstDay.setHours(0, 0, 0, 0);  // explicitly set to start of the day
+    
+    // Last day of the current month
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);  // 0th day of next month = last day of current month
+    lastDay.setHours(23, 59, 59, 999);  // explicitly set to the last moment of the day
     return {
       start: firstDay.toISOString().split('T')[0],
       end: lastDay.toISOString().split('T')[0]
@@ -66,8 +74,10 @@ export default function Dashboard() {
         user_id: userId,
         start_date: start,
         end_date: end
-      });
-      
+      });      
+      console.log(userId)
+      console.log(start)
+      console.log(end)
       setBudgetData({
         totalIncome: budgetResponse.data.total_income || 0,
         totalExpense: budgetResponse.data.total_expense || 0,
@@ -94,29 +104,35 @@ export default function Dashboard() {
   const handleTransaction = async (formData) => {
     try {
       const endpoint = showForm === 'income' ? '/api/finances/add-income/' : '/api/finances/add-expense/';
+      
       const payload = {
         user_id: userId,
         category: formData.category || (showForm === 'income' ? 'Income' : 'Expense'),
-        date: formData.date
+        title: formData.title,  // Add title to payload
+        date: formData.date,
+        description: formData.description || ''  // Add description to payload, default to empty string if not provided
       };
-
+      console.log('Payload:', payload); // Log the payload to check if it's correct
+  
+      // Set amount based on whether the form is income or expense
       if (showForm === 'income') {
-        payload.income = parseFloat(formData.amount);
+        payload.amount = parseFloat(formData.amount);
       } else {
-        payload.expense = parseFloat(formData.amount);
+        payload.amount = parseFloat(formData.amount);
       }
-
+  
+      // Make the API request with the payload
       const response = await axios.post(endpoint, payload);
-
+  
       setMessage(response.data.message || `${showForm} added successfully!`);
       setMessageType('success');
       setShowForm(null);
       
-      // Refresh data
+      // Refresh data and trigger other component updates
       await fetchData(userId);
-      // Trigger update for other components
       triggerUpdate();
-
+  
+      // Clear the message after 3 seconds
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error adding transaction:', error);

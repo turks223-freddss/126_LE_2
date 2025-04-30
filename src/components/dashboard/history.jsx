@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
-import { ArrowUpRight, ArrowDownRight, Filter, Download } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Filter, Download,Edit, Trash } from 'lucide-react';
 
 export default function History() {
   const { user } = useAuth();
@@ -17,6 +17,16 @@ export default function History() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [availableCategories, setAvailableCategories] = useState([]);
+
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [updatedAmount, setUpdatedAmount] = useState('');
+  const [updatedCategory, setUpdatedCategory] = useState('');
+  const [updatedTitle, setUpdatedTitle] = useState('');
+  const [updatedDescription, setUpdatedDescription] = useState('');
+  const [updatedDate, setUpdatedDate] = useState('');
+
+
+  
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('user_id');
@@ -81,6 +91,84 @@ export default function History() {
     }
   };
 
+  const handleDelete = async (userId, entryId, entryType) => {
+    try {
+      const response = await axios.delete(`/api/finances/delete/${userId}/${entryId}/`, {
+        data: { type: entryType }
+      });
+      
+  
+      if (response.status === 204) {
+        alert(`${entryType} entry deleted successfully.`);
+      } else {
+        alert(`Error: ${response.data.error}`);
+      }
+    } catch (error) {
+      
+      alert('Something went wrong while deleting the entry.');
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (userId, entryId, entryType, updatedData, onSuccess) => {
+    try {
+      const response = await axios.patch(`/api/finances/update/${userId}/${entryId}/`, {
+        type: entryType,
+        ...updatedData,
+      });
+  
+      if (response.status === 200) {
+        alert(`${entryType} entry updated successfully.`);
+        if (onSuccess) onSuccess(); // refresh data or UI
+      } else {
+        alert(`Error: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Something went wrong while updating the entry.');
+    }
+  };
+  
+  const [editId, setEditId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    amount: '',
+  });
+
+  const startEditing = (entry) => {
+    setEditId(entry.id);
+    setEditForm({
+      title: entry.title,
+      description: entry.description,
+      category: entry.category,
+      amount: Math.abs(entry.amount), // remove negative sign for expense
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditId(null);
+    setEditForm({
+      title: '',
+      description: '',
+      category: '',
+      amount: '',
+    });
+  };
+
+  const handleChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+
+
+
+
+
+
+
+
   const resetFilters = () => {
     setSelectedMonth('all');
     setDateRange({ start: '', end: '' });
@@ -137,6 +225,8 @@ export default function History() {
     link.click();
     document.body.removeChild(link);
   };
+
+  
 
   if (loading) {
     return (
@@ -249,8 +339,11 @@ export default function History() {
               <tr>
                 <th className="px-4 py-3 rounded-tl-lg">Type</th>
                 <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">description</th>
                 <th className="px-4 py-3 rounded-tr-lg">Date</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
 
             </thead>
@@ -262,8 +355,8 @@ export default function History() {
                   </td>
                 </tr>
               ) : (
-                financeData.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                financeData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {item.type === 'income' ? (
@@ -278,14 +371,113 @@ export default function History() {
                         <span>{item.type === 'income' ? 'Income' : 'Expense'}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">{item.category || (item.type === 'income' ? 'Income' : 'Expense')}</td>
-                    <td className={`px-4 py-3 font-medium ${
-                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
-                    </td>
+
+                    {editId === item.id ? (
+                      <>
+                        <td className="px-4 py-3">
+                          <input
+                            name="category"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.category}
+                            onChange={handleChange}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            name="title"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.title}
+                            onChange={handleChange}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            name="amount"
+                            type="number"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.amount}
+                            onChange={handleChange}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            name="description"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.description}
+                            onChange={handleChange}
+                          />
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3">{item.category}</td>
+                        <td className="px-4 py-3">{item.title}</td>
+                        <td
+                          className={`px-4 py-3 font-medium ${
+                            item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          }`}
+                        >
+                          {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
+                        </td>
+                        <td className="px-4 py-3">{item.description}</td>
+                      </>
+                    )}
+
                     <td className="px-4 py-3 text-gray-600">
                       {new Date(item.date).toLocaleDateString()}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {editId === item.id ? (
+                        <>
+                          <button
+                            onClick={() =>
+                              {handleUpdate(
+                                userId,
+                                item.id,
+                                item.type,
+                                {
+                                  title: editForm.title,
+                                  description: editForm.description,
+                                  category: editForm.category,
+                                  amount: editForm.amount,
+                                },
+                                () => {
+                                  cancelEditing();
+                                  // Optionally refresh financeData here
+                                }
+                              );window.location.reload(); }
+                            }
+                            className="text-green-500 hover:text-green-700 mr-2"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={cancelEditing}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEditing(item)}
+                            className="text-blue-500 hover:text-blue-700 mr-2"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDelete(userId, item.id, item.type);
+                              window.location.reload();
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -293,6 +485,7 @@ export default function History() {
             </tbody>
           </table>
         </div>
+
       </Card>
     </div>
   );

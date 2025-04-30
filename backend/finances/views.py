@@ -21,11 +21,12 @@ User = get_user_model()
 class AddIncomeView(APIView):
     def post(self, request):
         user_id = request.data.get('user_id')
-        income_amount = request.data.get('income')
-        category = request.data.get('category', 'Income')  # default to 'Income' if not provided
+        amount = request.data.get('amount')
         date = request.data.get('date')
+        title = request.data.get('title', 'Untitled')  # default to 'Untitled' if not provided
+        description = request.data.get('description')  # can be None
 
-        if not all([user_id, income_amount, date]):
+        if not all([user_id, amount, date]):
             return Response({'error': 'user_id, income, and date are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(User, id=user_id)
@@ -33,9 +34,10 @@ class AddIncomeView(APIView):
         try:
             income = Income.objects.create(
                 user=user,
-                income=income_amount,
-                category=category,
-                date=date
+                income=amount,
+                date=date,
+                title=title,
+                description=description
             )
             return Response({'message': 'Income added successfully', 'income_id': income.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -44,11 +46,13 @@ class AddIncomeView(APIView):
 class AddExpenseView(APIView):
     def post(self, request):
         user_id = request.data.get('user_id')
-        expense_amount = request.data.get('expense')
+        amount = request.data.get('amount')
         category = request.data.get('category', 'expenses')  # default to 'expenses' if not provided
         date = request.data.get('date')
+        title = request.data.get('title', 'Untitled')  # default to 'Untitled' if not provided
+        description = request.data.get('description')  # can be None
 
-        if not all([user_id, expense_amount, date]):
+        if not all([user_id, amount, date]):
             return Response({'error': 'user_id, expense, and date are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(User, id=user_id)
@@ -56,9 +60,11 @@ class AddExpenseView(APIView):
         try:
             expense = Expense.objects.create(
                 user=user,
-                expense=expense_amount,
+                expense=amount,
                 category=category,
-                date=date
+                date=date,
+                title=title,
+                description=description
             )
             return Response({'message': 'Expense added successfully', 'expense_id': expense.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -104,27 +110,103 @@ def finance_details(request, user_id):
     expenses = Expense.objects.filter(user_id=user_id)
 
     combined_data = []
-
+    
     for income in incomes:
         combined_data.append({
+            'id': income.id,
             'type': 'income',
             'category': income.category,
             'amount': float(income.income),
+            'title':income.title,
+            'description':income.description,
             'date': income.date.isoformat(),  # send date as string
         })
-
+        
     for expense in expenses:
         combined_data.append({
+            'id': expense.id,
             'type': 'expense',
             'category': expense.category,
             'amount': float(expense.expense) * -1,  # Expenses are negative
-            'date': expense.date.isoformat(),
+            'title':expense.title,
+            'description':expense.description,
+            'date': expense.date.isoformat(),  # send date as string
         })
+        
 
     # Sort by date ascending
     combined_data.sort(key=lambda x: x['date'])
 
     return JsonResponse({'finance': combined_data})
+
+@api_view(['PATCH'])
+def update_finance_entry(request, user_id, entry_id):
+    entry_type = request.data.get('type')
+    new_title = request.data.get('title')
+    new_description = request.data.get('description')
+    new_category = request.data.get('category')
+    new_amount = request.data.get('amount')
+
+    if not entry_type:
+        return JsonResponse({'error': 'Type (income or expense) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not any([new_title, new_description, new_category, new_amount]):
+        return JsonResponse({'error': 'At least one field (title, description, category, amount) is required for update.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        if entry_type == 'income':
+            entry = Income.objects.get(id=entry_id, user_id=user_id)
+            if new_title:
+                entry.title = new_title
+            if new_description:
+                entry.description = new_description
+            if new_category:
+                entry.category = new_category
+            if new_amount is not None:
+                entry.income = new_amount
+            entry.save()
+        elif entry_type == 'expense':
+            entry = Expense.objects.get(id=entry_id, user_id=user_id)
+            if new_title:
+                entry.title = new_title
+            if new_description:
+                entry.description = new_description
+            if new_category:
+                entry.category = new_category
+            if new_amount is not None:
+                entry.expense = new_amount
+            entry.save()
+        else:
+            return JsonResponse({'error': 'Invalid type. Must be "income" or "expense".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return JsonResponse({'message': f'{entry_type.capitalize()} entry updated successfully.'}, status=status.HTTP_200_OK)
+
+    except (Income.DoesNotExist, Expense.DoesNotExist):
+        return JsonResponse({'error': f'{entry_type.capitalize()} entry not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+def delete_finance_entry(request, user_id, entry_id):
+    entry_type = request.data.get('type')
+
+    if not entry_type:
+        return JsonResponse({'error': 'Type (income or expense) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        if entry_type == 'income':
+            entry = Income.objects.get(id=entry_id, user_id=user_id)
+        elif entry_type == 'expense':
+            entry = Expense.objects.get(id=entry_id, user_id=user_id)
+        else:
+            return JsonResponse({'error': 'Invalid type. Must be "income" or "expense".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        entry.delete()
+        return JsonResponse({'message': f'{entry_type.capitalize()} entry deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+    except (Income.DoesNotExist, Expense.DoesNotExist):
+        return JsonResponse({'error': f'{entry_type.capitalize()} entry not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 
 @api_view(['POST'])
@@ -146,7 +228,9 @@ def list_user_income(request):
         {
             "id":income.id,
             "category": income.category,
+            "title": income.title,
             "income": float(income.income),
+            "description": income.description,
             "date": income.date.strftime("%Y-%m-%d")
         }
         for income in incomes
@@ -172,7 +256,9 @@ def list_user_expense(request):
         {
             "id": expense.id,
             "category": expense.category,
+            "title": expense.title,
             "expense": float(expense.expense),
+            "description": expense.description,
             "date": expense.date.strftime("%Y-%m-%d")
         }
         for expense in expenses
@@ -189,13 +275,19 @@ def modify_income(request, income_id):
 
     if request.method == 'PATCH':
         category = request.data.get('category')
+        title = request.data.get('title')
         amount = request.data.get('income')
+        description = request.data.get('description')
         date = request.data.get('date')
 
         if category is not None:
             income.category = category
+        if title is not None:
+            income.title = title
         if amount is not None:
             income.income = amount
+        if description is not None:
+            income.description = description
         if date is not None:
             income.date = date
 
@@ -216,13 +308,19 @@ def modify_expense(request, expense_id):
 
     if request.method == 'PATCH':
         category = request.data.get('category')
+        title = request.data.get('title')
         amount = request.data.get('expense')
+        description = request.data.get('description')
         date = request.data.get('date')
 
         if category is not None:
             expense.category = category
+        if title is not None:
+            expense.title = title
         if amount is not None:
             expense.expense = amount
+        if description is not None:
+            expense.description = description
         if date is not None:
             expense.date = date
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
-import { ArrowUpRight, ArrowDownRight, Filter, Download } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Filter, Download,Edit, Trash } from 'lucide-react';
 
 export default function History() {
   const { user } = useAuth();
@@ -17,6 +17,13 @@ export default function History() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [availableCategories, setAvailableCategories] = useState([]);
+
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [updatedAmount, setUpdatedAmount] = useState('');
+  const [updatedCategory, setUpdatedCategory] = useState('');
+  const [updatedTitle, setUpdatedTitle] = useState('');
+  const [updatedDescription, setUpdatedDescription] = useState('');
+  const [updatedDate, setUpdatedDate] = useState('');
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('user_id');
@@ -81,6 +88,28 @@ export default function History() {
     }
   };
 
+  const handleDelete = async (userId, entryId, entryType) => {
+    try {
+      const response = await axios.delete(`/api/finances/delete/${userId}/${entryId}/`, {
+        data: { type: entryType }
+      });
+      
+  
+      if (response.status === 204) {
+        alert(`${entryType} entry deleted successfully.`);
+      } else {
+        alert(`Error: ${response.data.error}`);
+      }
+    } catch (error) {
+      
+      alert('Something went wrong while deleting the entry.');
+      console.error(error);
+    }
+  };
+
+
+
+
   const resetFilters = () => {
     setSelectedMonth('all');
     setDateRange({ start: '', end: '' });
@@ -137,6 +166,8 @@ export default function History() {
     link.click();
     document.body.removeChild(link);
   };
+
+  
 
   if (loading) {
     return (
@@ -249,8 +280,11 @@ export default function History() {
               <tr>
                 <th className="px-4 py-3 rounded-tl-lg">Type</th>
                 <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">description</th>
                 <th className="px-4 py-3 rounded-tr-lg">Date</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
 
             </thead>
@@ -262,8 +296,8 @@ export default function History() {
                   </td>
                 </tr>
               ) : (
-                financeData.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                financeData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {item.type === 'income' ? (
@@ -279,13 +313,29 @@ export default function History() {
                       </div>
                     </td>
                     <td className="px-4 py-3">{item.category || (item.type === 'income' ? 'Income' : 'Expense')}</td>
+                    <td className="px-4 py-3">{item.title}</td>
                     <td className={`px-4 py-3 font-medium ${
                       item.type === 'income' ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
                     </td>
+                    <td className="px-4 py-3">{item.description}</td>
                     <td className="px-4 py-3 text-gray-600">
                       {new Date(item.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        className="text-blue-500 hover:text-blue-700 mr-2"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => {handleDelete(userId, item.id, item.type); window.location.reload();}}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash className="h-5 w-5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -293,6 +343,65 @@ export default function History() {
             </tbody>
           </table>
         </div>
+
+
+        {/* Edit Modal */}
+        {editingEntry && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h3 className="text-lg font-bold">Edit Entry</h3>
+              <div className="space-y-4 mt-4">
+                <input
+                  type="text"
+                  value={updatedTitle}
+                  onChange={(e) => setUpdatedTitle(e.target.value)}
+                  placeholder="Title"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="number"
+                  value={updatedAmount}
+                  onChange={(e) => setUpdatedAmount(e.target.value)}
+                  placeholder="Amount"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={updatedCategory}
+                  onChange={(e) => setUpdatedCategory(e.target.value)}
+                  placeholder="Category"
+                  className="w-full p-2 border rounded"
+                />
+                <textarea
+                  value={updatedDescription}
+                  onChange={(e) => setUpdatedDescription(e.target.value)}
+                  placeholder="Description"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="date"
+                  value={updatedDate}
+                  onChange={(e) => setUpdatedDate(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-4 mt-4">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 bg-gray-300 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

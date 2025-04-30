@@ -5,7 +5,9 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
-    date: new Date().toISOString().split('T')[0]
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    description: ''
   });
 
   const handleSubmit = (e) => {
@@ -51,13 +53,33 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
             <label className="block text-sm font-medium text-gray-400 mb-1">
               Category
             </label>
-            <input
-              type="text"
+            <select
               name="category"
               value={formData.category}
               onChange={handleChange}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Salary, Food, Bills"
+            >
+              <option value="">Select a category</option>
+              <option value="Income">Income</option>
+              <option value="Salary">Salary</option>
+              <option value="Food">Food</option>
+              <option value="Bills">Bills</option>
+              <option value="Entertainment">Entertainment</option>
+              {/* Add more categories as needed */}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
             />
           </div>
 
@@ -72,6 +94,19 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
               onChange={handleChange}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows="3"
             />
           </div>
 
@@ -98,4 +133,4 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
   );
 };
 
-export default TransactionForm; 
+export default TransactionForm;

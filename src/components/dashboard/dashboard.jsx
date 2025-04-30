@@ -12,6 +12,7 @@ import Sidebar from './sidebar';
 import BudgetSummary from './BudgetSummary';
 import TransactionForm from './TransactionForm';
 import TransactionHistory from './TransactionHistory';
+import { useTheme } from '../../contexts/ThemeContext';
 
 ChartJS.register(
   ArcElement,
@@ -36,6 +37,7 @@ export default function Dashboard() {
     remainingBudget: 0
   });
   const [transactions, setTransactions] = useState([]);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('user_id');
@@ -180,21 +182,33 @@ export default function Dashboard() {
       <div className="flex gap-4">
         <button
           onClick={() => setShowForm('income')}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors"
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${
+            isDark
+              ? 'bg-white hover:bg-gray-600 text-black'
+              : 'bg-gray-900 hover:bg-orange-600 text-white'
+          }`}
         >
           <Plus className="h-5 w-5" />
           Add Income
         </button>
         <button
           onClick={() => setShowForm('expense')}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors"
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${
+            isDark
+              ? 'bg-white hover:bg-gray-600 text-black'
+              : 'bg-gray-900 hover:bg-orange-600 text-white'
+          }`}
         >
           <Plus className="h-5 w-5" />
           Add Expense
         </button>
         <Link
           to="/history"
-          className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors ml-auto"
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ml-auto ${
+            isDark
+              ? 'bg-white hover:bg-gray-600 text-black'
+              : 'bg-gray-900 hover:bg-orange-600 text-white'
+          }`}
         >
           <History className="h-5 w-5" />
           View History
@@ -218,7 +232,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
           <div className="overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
@@ -227,7 +241,23 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {transactions.slice(0, 5).map((item, index) => (
+              {[...transactions]
+                .map((t, index) => ({ ...t, originalIndex: index })) // preserve order
+                .sort((a, b) => {
+                  const [dayA, monthA] = a.date.split('-').map(Number);
+                  const [dayB, monthB] = b.date.split('-').map(Number);
+
+                  const dateA = new Date(2025, monthA - 1, dayA);
+                  const dateB = new Date(2025, monthB - 1, dayB);
+
+                  if (dateA > dateB) return -1;
+                  if (dateA < dateB) return 1;
+
+                  // same date — newer entry first based on insertion order
+                  return b.originalIndex - a.originalIndex;
+                })
+                .slice(0, 5)
+                .map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -244,16 +274,19 @@ export default function Dashboard() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{item.category}</td>
-                    <td className={`px-4 py-3 font-medium ${
-                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <td
+                      className={`px-4 py-3 font-medium ${
+                        item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
                       {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
                       {new Date(item.date).toLocaleDateString()}
                     </td>
                   </tr>
-                ))}
+              ))}
+
               </tbody>
             </table>
           </div>

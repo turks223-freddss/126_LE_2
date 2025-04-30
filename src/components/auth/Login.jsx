@@ -12,6 +12,8 @@ const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -35,12 +37,6 @@ const Login = () => {
 
     return (
         <div className="w-full">
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-6">
-                    {error}
-                </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-5">
                     <Input
@@ -66,6 +62,12 @@ const Login = () => {
                         className="py-3 px-4 block w-full rounded-lg text-base"
                     />
                 </div>
+
+                {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-6">
+                    {error}
+                </div>
+                )}
 
                 <div className="flex items-center justify-between">
                     <div className="text-sm">

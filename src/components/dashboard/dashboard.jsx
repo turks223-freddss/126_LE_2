@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
-
 import { useFinance } from '../../contexts/FinanceContext';
 import { Plus, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -111,7 +110,7 @@ export default function Dashboard() {
         title: formData.title,  // Add title to payload
         date: formData.date,
         description: formData.description || ''  // Add description to payload, default to empty string if not provided
-      };
+      }
       console.log('Payload:', payload); // Log the payload to check if it's correct
   
       // Set amount based on whether the form is income or expense
@@ -143,17 +142,15 @@ export default function Dashboard() {
 
   // Chart data
   const doughnutData = {
-    labels: ['Income', 'Expenses', 'Remaining'],
+    labels: ['Income', 'Expenses'],
     datasets: [{
       data: [
         budgetData.totalIncome,
         budgetData.totalExpense,
-        budgetData.remainingBudget
       ],
       backgroundColor: [
-        '#4BC0C0',  // Income - Teal
-        '#FF6384',  // Expenses - Red
-        '#36A2EB',  // Remaining - Blue
+        '#36A2EB',  // Income - Blue
+        '#ef4444 ',  // Expenses - Red 
       ],
       borderWidth: 0,
     }]
@@ -218,17 +215,7 @@ export default function Dashboard() {
           <Plus className="h-5 w-5" />
           Add Expense
         </button>
-        <Link
-          to="/history"
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ml-auto ${
-            isDark
-              ? 'bg-white hover:bg-gray-600 text-black'
-              : 'bg-gray-900 hover:bg-orange-600 text-white'
-          }`}
-        >
-          <History className="h-5 w-5" />
-          View History
-        </Link>
+        
       </div>
 
       {/* Transaction Form Modal */}
@@ -245,68 +232,84 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Transactions */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
-          <div className="overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Recent Transactions</h2>
+            <Link
+              to="/history"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-colors ${
+                isDark
+                  ? 'bg-white hover:bg-gray-600 text-black'
+                  : 'bg-gray-900 hover:bg-orange-600 text-white'
+              }`}
+            >
+              <History className="h-5 w-5" />
+              View History
+            </Link>
+          </div>
+          <div className="overflow-y-auto">
             <table className="w-full">
               <thead className="bg-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-              {[...transactions]
-                .map((t, index) => ({ ...t, originalIndex: index })) // preserve order
-                .sort((a, b) => {
-                  const [dayA, monthA] = a.date.split('-').map(Number);
-                  const [dayB, monthB] = b.date.split('-').map(Number);
+                {[...transactions]
+                  .map((t, index) => ({ ...t, originalIndex: index })) // preserve order
+                  .sort((a, b) => {
+                    const [dayA, monthA] = a.date.split('-').map(Number);
+                    const [dayB, monthB] = b.date.split('-').map(Number);
 
-                  const dateA = new Date(2025, monthA - 1, dayA);
-                  const dateB = new Date(2025, monthB - 1, dayB);
+                    const dateA = new Date(2025, monthA - 1, dayA);
+                    const dateB = new Date(2025, monthB - 1, dayB);
 
-                  if (dateA > dateB) return -1;
-                  if (dateA < dateB) return 1;
+                    if (dateA > dateB) return -1;
+                    if (dateA < dateB) return 1;
 
-                  // same date — newer entry first based on insertion order
-                  return b.originalIndex - a.originalIndex;
-                })
-                .slice(0, 5)
-                .map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {item.type === 'income' ? (
-                          <div className="p-1.5 rounded-lg bg-green-100">
-                            <ArrowUpRight className="h-4 w-4 text-green-600" />
-                          </div>
-                        ) : (
-                          <div className="p-1.5 rounded-lg bg-red-100">
-                            <ArrowDownRight className="h-4 w-4 text-red-600" />
-                          </div>
-                        )}
-                        <span className="capitalize">{item.type}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{item.category}</td>
-                    <td
-                      className={`px-4 py-3 font-medium ${
-                        item.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {new Date(item.date).toLocaleDateString()}
-                    </td>
-                  </tr>
-              ))}
-
+                    // same date — newer entry first based on insertion order
+                    return b.originalIndex - a.originalIndex;
+                  })
+                  .slice(0, 5)
+                  .map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {item.type === 'income' ? (
+                            <div className="p-1.5 rounded-lg bg-green-100">
+                              <ArrowUpRight className="h-4 w-4 text-green-600" />
+                            </div>
+                          ) : (
+                            <div className="p-1.5 rounded-lg bg-red-100">
+                              <ArrowDownRight className="h-4 w-4 text-red-600" />
+                            </div>
+                          )}
+                          <span className="capitalize">{item.type}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{item.title}</td> {/* Display Title */}
+                      <td className="px-4 py-3 text-gray-600">{item.category}</td>
+                      <td
+                        className={`px-4 py-3 font-medium ${
+                          item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {`${item.type === 'income' ? '+' : '-'}₱${Math.abs(item.amount)}`}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {new Date(item.date).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
+            
           </div>
         </div>
+
 
         {/* Financial Summary Charts */}
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -317,15 +320,15 @@ export default function Dashboard() {
           <div className="mt-4 grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-gray-500">Income</p>
-              <p className="text-lg font-semibold text-green-600">${budgetData.totalIncome}</p>
+              <p className="text-lg font-semibold text-green-600">₱{budgetData.totalIncome}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Expenses</p>
-              <p className="text-lg font-semibold text-red-600">${budgetData.totalExpense}</p>
+              <p className="text-lg font-semibold text-red-600">₱{budgetData.totalExpense}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Remaining</p>
-              <p className="text-lg font-semibold text-blue-600">${budgetData.remainingBudget}</p>
+              <p className="text-lg font-semibold text-blue-600">₱{budgetData.remainingBudget}</p>
 
             </div>
           </div>

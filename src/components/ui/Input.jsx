@@ -25,6 +25,7 @@ const Input = React.forwardRef(({
             block w-full rounded-md border-gray-300 shadow-sm
             focus:border-blue-500 focus:ring-blue-500
             disabled:bg-gray-100 disabled:cursor-not-allowed
+            bg-white 
             ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
             ${className}
           `}

@@ -139,6 +139,51 @@ def finance_details(request, user_id):
 
     return JsonResponse({'finance': combined_data})
 
+@api_view(['PATCH'])
+def update_finance_entry(request, user_id, entry_id):
+    entry_type = request.data.get('type')
+    new_title = request.data.get('title')
+    new_description = request.data.get('description')
+    new_category = request.data.get('category')
+    new_amount = request.data.get('amount')
+
+    if not entry_type:
+        return JsonResponse({'error': 'Type (income or expense) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not any([new_title, new_description, new_category, new_amount]):
+        return JsonResponse({'error': 'At least one field (title, description, category, amount) is required for update.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        if entry_type == 'income':
+            entry = Income.objects.get(id=entry_id, user_id=user_id)
+            if new_title:
+                entry.title = new_title
+            if new_description:
+                entry.description = new_description
+            if new_category:
+                entry.category = new_category
+            if new_amount is not None:
+                entry.income = new_amount
+            entry.save()
+        elif entry_type == 'expense':
+            entry = Expense.objects.get(id=entry_id, user_id=user_id)
+            if new_title:
+                entry.title = new_title
+            if new_description:
+                entry.description = new_description
+            if new_category:
+                entry.category = new_category
+            if new_amount is not None:
+                entry.expense = new_amount
+            entry.save()
+        else:
+            return JsonResponse({'error': 'Invalid type. Must be "income" or "expense".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return JsonResponse({'message': f'{entry_type.capitalize()} entry updated successfully.'}, status=status.HTTP_200_OK)
+
+    except (Income.DoesNotExist, Expense.DoesNotExist):
+        return JsonResponse({'error': f'{entry_type.capitalize()} entry not found.'}, status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['DELETE'])
 def delete_finance_entry(request, user_id, entry_id):
     entry_type = request.data.get('type')
@@ -159,6 +204,10 @@ def delete_finance_entry(request, user_id, entry_id):
 
     except (Income.DoesNotExist, Expense.DoesNotExist):
         return JsonResponse({'error': f'{entry_type.capitalize()} entry not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
 
 @api_view(['POST'])
 def list_user_income(request):

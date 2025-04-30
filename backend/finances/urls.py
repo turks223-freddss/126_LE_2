@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AddIncomeView, AddExpenseView, BudgetCalculatorView, finance_details, list_user_income, list_user_expense, modify_income,modify_expense, delete_finance_entry
+from .views import AddIncomeView, AddExpenseView, BudgetCalculatorView, finance_details, list_user_income, list_user_expense, modify_income,modify_expense, delete_finance_entry, update_finance_entry
 from . import views
 
 urlpatterns = [
@@ -8,7 +8,7 @@ urlpatterns = [
     path('budget/', BudgetCalculatorView.as_view(), name='budget'),
     path('<int:user_id>/finance-details/', finance_details, name='finance_details'),
     path('delete/<int:user_id>/<int:entry_id>/', delete_finance_entry, name='delete_finance_entry'),
-    
+    path('update/<int:user_id>/<int:entry_id>/', update_finance_entry, name='update_finance_entry'),
     
     # not used
     path('list-income/', list_user_income, name='list_user_income'),

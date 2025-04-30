@@ -25,6 +25,9 @@ export default function History() {
   const [updatedDescription, setUpdatedDescription] = useState('');
   const [updatedDate, setUpdatedDate] = useState('');
 
+
+  
+
   useEffect(() => {
     const storedUserId = localStorage.getItem('user_id');
     if (storedUserId) {
@@ -106,6 +109,62 @@ export default function History() {
       console.error(error);
     }
   };
+
+  const handleUpdate = async (userId, entryId, entryType, updatedData, onSuccess) => {
+    try {
+      const response = await axios.patch(`/api/finances/update/${userId}/${entryId}/`, {
+        type: entryType,
+        ...updatedData,
+      });
+  
+      if (response.status === 200) {
+        alert(`${entryType} entry updated successfully.`);
+        if (onSuccess) onSuccess(); // refresh data or UI
+      } else {
+        alert(`Error: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Something went wrong while updating the entry.');
+    }
+  };
+  
+  const [editId, setEditId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    amount: '',
+  });
+
+  const startEditing = (entry) => {
+    setEditId(entry.id);
+    setEditForm({
+      title: entry.title,
+      description: entry.description,
+      category: entry.category,
+      amount: Math.abs(entry.amount), // remove negative sign for expense
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditId(null);
+    setEditForm({
+      title: '',
+      description: '',
+      category: '',
+      amount: '',
+    });
+  };
+
+  const handleChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+
+
+
+
 
 
 
@@ -312,30 +371,113 @@ export default function History() {
                         <span>{item.type === 'income' ? 'Income' : 'Expense'}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">{item.category || (item.type === 'income' ? 'Income' : 'Expense')}</td>
-                    <td className="px-4 py-3">{item.title}</td>
-                    <td className={`px-4 py-3 font-medium ${
-                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
-                    </td>
-                    <td className="px-4 py-3">{item.description}</td>
+
+                    {editId === item.id ? (
+                      <>
+                        <td className="px-4 py-3">
+                          <input
+                            name="category"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.category}
+                            onChange={handleChange}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            name="title"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.title}
+                            onChange={handleChange}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            name="amount"
+                            type="number"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.amount}
+                            onChange={handleChange}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            name="description"
+                            className="w-full border rounded px-2 py-1"
+                            value={editForm.description}
+                            onChange={handleChange}
+                          />
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3">{item.category}</td>
+                        <td className="px-4 py-3">{item.title}</td>
+                        <td
+                          className={`px-4 py-3 font-medium ${
+                            item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          }`}
+                        >
+                          {`${item.type === 'income' ? '+' : '-'}$${Math.abs(item.amount)}`}
+                        </td>
+                        <td className="px-4 py-3">{item.description}</td>
+                      </>
+                    )}
+
                     <td className="px-4 py-3 text-gray-600">
                       {new Date(item.date).toLocaleDateString()}
                     </td>
+
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleEditClick(item)}
-                        className="text-blue-500 hover:text-blue-700 mr-2"
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => {handleDelete(userId, item.id, item.type); window.location.reload();}}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash className="h-5 w-5" />
-                      </button>
+                      {editId === item.id ? (
+                        <>
+                          <button
+                            onClick={() =>
+                              {handleUpdate(
+                                userId,
+                                item.id,
+                                item.type,
+                                {
+                                  title: editForm.title,
+                                  description: editForm.description,
+                                  category: editForm.category,
+                                  amount: editForm.amount,
+                                },
+                                () => {
+                                  cancelEditing();
+                                  // Optionally refresh financeData here
+                                }
+                              );window.location.reload(); }
+                            }
+                            className="text-green-500 hover:text-green-700 mr-2"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={cancelEditing}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEditing(item)}
+                            className="text-blue-500 hover:text-blue-700 mr-2"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDelete(userId, item.id, item.type);
+                              window.location.reload();
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -344,64 +486,6 @@ export default function History() {
           </table>
         </div>
 
-
-        {/* Edit Modal */}
-        {editingEntry && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-              <h3 className="text-lg font-bold">Edit Entry</h3>
-              <div className="space-y-4 mt-4">
-                <input
-                  type="text"
-                  value={updatedTitle}
-                  onChange={(e) => setUpdatedTitle(e.target.value)}
-                  placeholder="Title"
-                  className="w-full p-2 border rounded"
-                />
-                <input
-                  type="number"
-                  value={updatedAmount}
-                  onChange={(e) => setUpdatedAmount(e.target.value)}
-                  placeholder="Amount"
-                  className="w-full p-2 border rounded"
-                />
-                <input
-                  type="text"
-                  value={updatedCategory}
-                  onChange={(e) => setUpdatedCategory(e.target.value)}
-                  placeholder="Category"
-                  className="w-full p-2 border rounded"
-                />
-                <textarea
-                  value={updatedDescription}
-                  onChange={(e) => setUpdatedDescription(e.target.value)}
-                  placeholder="Description"
-                  className="w-full p-2 border rounded"
-                />
-                <input
-                  type="date"
-                  value={updatedDate}
-                  onChange={(e) => setUpdatedDate(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div className="flex justify-end gap-4 mt-4">
-                <button
-                  onClick={handleCancelEdit}
-                  className="px-4 py-2 bg-gray-300 rounded-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </Card>
     </div>
   );

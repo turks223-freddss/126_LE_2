@@ -128,14 +128,15 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
               name="category"
               value={formData.category}
               onChange={handleChange}
+              required
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Select a category</option>
-              <option value="Income">Income</option>
-              <option value="Salary">Salary</option>
               <option value="Food">Food</option>
-              <option value="Bills">Bills</option>
+              <option value="Transport">Transport</option>
+              <option value="Utilities">Utilities</option>
               <option value="Entertainment">Entertainment</option>
+              <option value="Miscellanous">Miscellanous</option>
             </select>
           </div>
 

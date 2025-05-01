@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import { exportToCSV } from '../../contexts/FinanceContext';
 import Card from '../ui/Card';
 import { ArrowUpRight, ArrowDownRight, Filter, Download,Edit, Trash, Check, X } from 'lucide-react';
 
@@ -182,58 +183,6 @@ export default function History() {
     setDateRange({ start: '', end: '' });
     setSelectedCategory('all');
   };
-
-
-  const exportToCSV = () => {
-    // Only proceed if there's data to export
-    if (financeData.length === 0) return;
-  
-    // Define new headers for the CSV
-    const headers = ['Type', 'Category', 'Title', 'Amount', 'Description', 'Date'];
-  
-    // Convert data to CSV format with the new columns
-    const csvData = financeData.map(item => [
-      item.type,
-      item.category || (item.type === 'income' ? 'Income' : 'Expense'),
-      item.title,  // Include title in the export
-      item.amount,
-      item.description,  // Include description in the export
-      new Date(item.date).toLocaleDateString()  // Format the date
-    ]);
-  
-    // Add headers to the beginning
-    csvData.unshift(headers);
-  
-    // Convert to CSV string
-    const csvString = csvData.map(row => row.join(',')).join('\n');
-  
-    // Create blob and download link
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    // Get current date for filename
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Create filename based on filters
-    let filename = `transactions_${today}`;
-    if (selectedMonth !== 'all') filename += `_${selectedMonth}`;
-    if (selectedCategory !== 'all') filename += `_${selectedCategory}`;
-    if (dateRange.start && dateRange.end) {
-      filename += `_${dateRange.start}_to_${dateRange.end}`;
-    }
-    filename += '.csv';
-  
-    // Trigger download
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  
-
   
 
   if (loading) {
@@ -259,7 +208,7 @@ export default function History() {
           <h1 className="text-2xl font-bold">Transaction History</h1>
           <div className="flex items-center gap-4">
             <button
-              onClick={exportToCSV}
+              onClick={() => exportToCSV(financeData, { selectedMonth, selectedCategory, dateRange })}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Download className="h-4 w-4" />

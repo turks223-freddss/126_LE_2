@@ -183,11 +183,6 @@ export default function History() {
     setSelectedCategory('all');
   };
 
-  // Get unique months from data for the month filter
-  const availableMonths = [...new Set(financeData.map(item => {
-    const date = new Date(item.date);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  }))];
 
   const exportToCSV = () => {
     // Only proceed if there's data to export

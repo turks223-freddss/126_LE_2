@@ -110,6 +110,9 @@ def finance_details(request, user_id):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     category = request.GET.get('category')  # New category filter
+    filter_type = request.GET.get('type', '')  # Filter by income or expense
+
+    filter_type = filter_type.lower()
 
     # Fetch incomes and expenses for the given user
     incomes = Income.objects.filter(user_id=user_id)
@@ -128,29 +131,31 @@ def finance_details(request, user_id):
     # Combine incomes and expenses
     combined_data = []
 
-    # Add income data
-    for income in incomes:
-        combined_data.append({
-            'id': income.id,
-            'type': 'income',
-            'category': income.category,
-            'amount': float(income.income),
-            'title': income.title,
-            'description': income.description,
-            'date': income.date.isoformat(),
-        })
+    # Add income data if filter is income or if no filter is set
+    if filter_type in ['', 'income']:
+        for income in incomes:
+            combined_data.append({
+                'id': income.id,
+                'type': 'income',
+                'category': income.category,
+                'amount': float(income.income),
+                'title': income.title,
+                'description': income.description,
+                'date': income.date.isoformat(),
+            })
 
-    # Add expense data
-    for expense in expenses:
-        combined_data.append({
-            'id': expense.id,
-            'type': 'expense',
-            'category': expense.category,
-            'amount': float(expense.expense) * -1,
-            'title': expense.title,
-            'description': expense.description,
-            'date': expense.date.isoformat(),
-        })
+    # Add expense data if filter is expense or if no filter is set
+    if filter_type in ['', 'expense']:
+        for expense in expenses:
+            combined_data.append({
+                'id': expense.id,
+                'type': 'expense',
+                'category': expense.category,
+                'amount': float(expense.expense) * -1,
+                'title': expense.title,
+                'description': expense.description,
+                'date': expense.date.isoformat(),
+            })
 
     # Sort by date ascending
     combined_data.sort(key=lambda x: x['date'])

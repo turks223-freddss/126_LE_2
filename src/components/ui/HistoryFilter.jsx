@@ -6,11 +6,28 @@ export default function Filters({
     selectedCategory,
     setSelectedCategory,
     availableCategories,
-    resetFilters
+    resetFilters,
+    selectedType,       // The selected type (Income/Expense)
+    setSelectedType,    // The setter for selectedType
     }) {
     return (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="flex flex-wrap gap-6">
+
+            {/* Income/Expense Filter */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <select
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="block w-48 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="all">All Types</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+            </div>
+
             {/* Date Range Filter */}
             <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>

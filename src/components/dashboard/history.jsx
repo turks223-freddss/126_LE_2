@@ -5,7 +5,8 @@ import { exportToCSV } from '../../contexts/FinanceContext';
 import Card from '../ui/Card';
 import Filters from '../ui/HistoryFilter'; 
 import TransactionTable from "./TransactionTable";
-import { ArrowUpRight, ArrowDownRight, Filter, Download,Edit, Trash, Check, X } from 'lucide-react';
+import { Filter, Download } from 'lucide-react';
+
 
 export default function History() {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ export default function History() {
   const [error, setError] = useState(null);
   
   // Filter states
-  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -28,9 +29,6 @@ export default function History() {
   const [updatedDescription, setUpdatedDescription] = useState('');
   const [updatedDate, setUpdatedDate] = useState('');
 
-
-  
-
   useEffect(() => {
     const storedUserId = localStorage.getItem('user_id');
     if (storedUserId) {
@@ -42,7 +40,7 @@ export default function History() {
     if (userId) {
       fetchFinanceDetails();
     }
-  }, [userId, selectedMonth, selectedCategory]);
+  }, [userId, selectedType, selectedCategory]);
 
   useEffect(() => {
     if (dateRange.start && dateRange.end) {
@@ -51,49 +49,56 @@ export default function History() {
   }, [dateRange]);
 
   const fetchFinanceDetails = async () => {
-    try {
-      setLoading(true);
-      let url = `/api/finances/${userId}/finance-details/`;
-      
-      // Add query parameters based on filters
-      const params = new URLSearchParams();
-      if (dateRange.start && dateRange.end) {
-        params.append('start_date', dateRange.start);
-        params.append('end_date', dateRange.end);
-      }
-      if (selectedCategory !== 'all') {
-        params.append('category', selectedCategory);
-      }
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-  
-      const response = await axios.get(url);
-      
-      if (response.data.finance) {
-        const sortedData = response.data.finance.sort((a, b) => 
-          new Date(b.date) - new Date(a.date)
-        );
-        setFinanceData(sortedData);
-  
-        const hardcodedCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Misc'];
+      try {
+        setLoading(true);
+        let url = `/api/finances/${userId}/finance-details/`;
 
-        setAvailableCategories(hardcodedCategories);
-  
-        if (selectedCategory !== 'all') {
-          const filteredData = sortedData.filter(item => item.category === selectedCategory);
-          setFinanceData(filteredData);  
+        // Add query parameters based on filters
+        const params = new URLSearchParams();
+
+        if (selectedType !== 'all') {  
+          params.append('type', selectedType);
         }
+
+        if (dateRange.start && dateRange.end) {
+          params.append('start_date', dateRange.start);
+          params.append('end_date', dateRange.end);
+        }
+        if (selectedCategory !== 'all') {
+          params.append('category', selectedCategory);
+        }
+        
+        
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+
+        const response = await axios.get(url);
+
+        if (response.data.finance) {
+          const sortedData = response.data.finance.sort((a, b) =>
+            new Date(b.date) - new Date(a.date)
+          );
+          setFinanceData(sortedData);
+
+          const hardcodedCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Misc'];
+
+          setAvailableCategories(hardcodedCategories);
+
+          if (selectedCategory !== 'all') {
+            const filteredData = sortedData.filter(item => item.category === selectedCategory);
+            setFinanceData(filteredData);
+          }
+        }
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching finance details:', error);
+        setError('Failed to load transaction history');
+      } finally {
+        setLoading(false);
       }
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching finance details:', error);
-      setError('Failed to load transaction history');
-    } finally {
-      setLoading(false);
-    }
   };
+
   
 
   const handleDelete = async (userId, entryId, entryType) => {
@@ -169,16 +174,8 @@ export default function History() {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
-
-
-
-
-
-
-
-
   const resetFilters = () => {
-    setSelectedMonth('all');
+    setSelectedType('all');
     setDateRange({ start: '', end: '' });
     setSelectedCategory('all');
   };
@@ -207,7 +204,7 @@ export default function History() {
           <h1 className="text-2xl font-bold">Transaction History</h1>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => exportToCSV(financeData, { selectedMonth, selectedCategory, dateRange })}
+              onClick={() => exportToCSV(financeData, { selectedType, selectedCategory, dateRange })}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Download className="h-4 w-4" />
@@ -223,17 +220,19 @@ export default function History() {
           </div>
         </div>
 
-        {/* Filters Section */}
-        {showFilters && (
-          <Filters
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            availableCategories={availableCategories}
-            resetFilters={resetFilters}
-          />
-        )}
+      {/* Filters Section */}
+      {showFilters && (
+        <Filters
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          availableCategories={availableCategories}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          resetFilters={resetFilters}
+        />
+      )}
 
 
       <TransactionTable

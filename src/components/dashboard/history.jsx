@@ -187,22 +187,26 @@ export default function History() {
   const exportToCSV = () => {
     // Only proceed if there's data to export
     if (financeData.length === 0) return;
-
-    // Convert data to CSV format
-    const headers = ['Type', 'Category', 'Amount', 'Date'];
+  
+    // Define new headers for the CSV
+    const headers = ['Type', 'Category', 'Title', 'Amount', 'Description', 'Date'];
+  
+    // Convert data to CSV format with the new columns
     const csvData = financeData.map(item => [
       item.type,
       item.category || (item.type === 'income' ? 'Income' : 'Expense'),
+      item.title,  // Include title in the export
       item.amount,
-      new Date(item.date).toLocaleDateString()
+      item.description,  // Include description in the export
+      new Date(item.date).toLocaleDateString()  // Format the date
     ]);
-
+  
     // Add headers to the beginning
     csvData.unshift(headers);
-
+  
     // Convert to CSV string
     const csvString = csvData.map(row => row.join(',')).join('\n');
-
+  
     // Create blob and download link
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -219,7 +223,7 @@ export default function History() {
       filename += `_${dateRange.start}_to_${dateRange.end}`;
     }
     filename += '.csv';
-
+  
     // Trigger download
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
@@ -228,6 +232,7 @@ export default function History() {
     link.click();
     document.body.removeChild(link);
   };
+  
 
   
 

@@ -36,9 +36,9 @@ const FinanceTable = ({
                 </td>
                 </tr>
             ) : (
-                financeData.map((item) => (
+                financeData.map((item,index) => (
                 <tr
-                    key={item.id}
+                    key={index}
                     className={`transition-all duration-300 ${
                     editId === item.id ? "bg-orange-200" : "hover:bg-orange-50"
                     }`}
@@ -58,7 +58,7 @@ const FinanceTable = ({
                     </div>
                     </td>
 
-                    {editId === item.id ? (
+                    {editId?.id === item.id && editId?.index===index ? (
                     <>
                         <td className="px-4 py-3">
                         <select
@@ -121,7 +121,7 @@ const FinanceTable = ({
                     </td>
 
                     <td className="px-4 py-3">
-                    {editId === item.id ? (
+                    {editId?.id === item.id && editId?.index===index ? (
                         <div className="flex gap-2">
                         <button
                             onClick={() => {
@@ -142,7 +142,7 @@ const FinanceTable = ({
                     ) : (
                         <div className="flex gap-2">
                         <button
-                            onClick={() => startEditing(item)}
+                            onClick={() => startEditing(item,index)}
                             className="text-blue-500 hover:text-blue-700"
                         >
                             <Edit className="h-5 w-5" />

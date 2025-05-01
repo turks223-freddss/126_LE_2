@@ -54,9 +54,6 @@ export default function History() {
       
       // Add query parameters based on filters
       const params = new URLSearchParams();
-      if (selectedMonth !== 'all') {
-        params.append('month', selectedMonth);
-      }
       if (dateRange.start && dateRange.end) {
         params.append('start_date', dateRange.start);
         params.append('end_date', dateRange.end);
@@ -68,7 +65,7 @@ export default function History() {
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-
+  
       const response = await axios.get(url);
       
       if (response.data.finance) {
@@ -77,10 +74,17 @@ export default function History() {
           new Date(b.date) - new Date(a.date)
         );
         setFinanceData(sortedData);
+  
+        // Hardcoded categories list
+        const hardcodedCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Misc'];
 
-        // Extract unique categories from the data
-        const categories = [...new Set(sortedData.map(item => item.category))].filter(Boolean);
-        setAvailableCategories(categories);
+        setAvailableCategories(hardcodedCategories);
+  
+        // Apply the category filter if needed
+        if (selectedCategory !== 'all') {
+          const filteredData = sortedData.filter(item => item.category === selectedCategory);
+          setFinanceData(filteredData);  // Update the finance data based on the selected category
+        }
       }
       setError(null);
     } catch (error) {
@@ -90,6 +94,7 @@ export default function History() {
       setLoading(false);
     }
   };
+  
 
   const handleDelete = async (userId, entryId, entryType) => {
     const confirmed = window.confirm(`Are you sure you want to delete this ${entryType} entry?`);
@@ -279,20 +284,7 @@ export default function History() {
         {showFilters && (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="flex flex-wrap gap-6">
-              {/* Month Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="block w-48 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Months</option>
-                  {availableMonths.map((month) => (
-                    <option key={month} value={month}>{month}</option>
-                  ))}
-                </select>
-              </div>
+              
 
               {/* Date Range Filter */}
               <div>
@@ -397,7 +389,7 @@ export default function History() {
                           <option value="Transport">Transport</option>
                           <option value="Utilities">Utilities</option>
                           <option value="Entertainment">Entertainment</option>
-                          <option value="Health">Health</option>
+                          <option value="Misc">Miscellanous</option>
                         </select>
                       </td>
                       <td className="px-4 py-3">

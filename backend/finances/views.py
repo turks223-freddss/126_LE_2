@@ -109,7 +109,9 @@ def finance_details(request, user_id):
     # Get query parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    category = request.GET.get('category')  # New category filter
 
+    # Fetch incomes and expenses for the given user
     incomes = Income.objects.filter(user_id=user_id)
     expenses = Expense.objects.filter(user_id=user_id)
 
@@ -118,8 +120,15 @@ def finance_details(request, user_id):
         incomes = incomes.filter(date__range=[start_date, end_date])
         expenses = expenses.filter(date__range=[start_date, end_date])
 
+    # Apply category filter if provided
+    if category and category != 'all':  # 'all' means no category filter
+        incomes = incomes.filter(category=category)
+        expenses = expenses.filter(category=category)
+
+    # Combine incomes and expenses
     combined_data = []
 
+    # Add income data
     for income in incomes:
         combined_data.append({
             'id': income.id,
@@ -131,6 +140,7 @@ def finance_details(request, user_id):
             'date': income.date.isoformat(),
         })
 
+    # Add expense data
     for expense in expenses:
         combined_data.append({
             'id': expense.id,

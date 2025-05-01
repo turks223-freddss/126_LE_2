@@ -150,8 +150,8 @@ export default function History() {
     amount: '',
   });
 
-  const startEditing = (entry) => {
-    setEditId(entry.id);
+  const startEditing = (entry,index) => {
+    setEditId({ id: entry.id, index: index });
     setEditForm({
       title: entry.title,
       description: entry.description,

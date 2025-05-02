@@ -120,6 +120,7 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
           </div>
 
           {/* Category Input */}
+          {type === 'expense' && (
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">
               Category
@@ -139,6 +140,7 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
               <option value="Miscellanous">Miscellanous</option>
             </select>
           </div>
+        )}
 
           {/* Date Input */}
           <div>

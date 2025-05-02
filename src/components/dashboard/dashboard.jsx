@@ -102,36 +102,38 @@ export default function Dashboard() {
 
   const handleTransaction = async (formData) => {
     try {
-      const endpoint = showForm === 'income' ? '/api/finances/add-income/' : '/api/finances/add-expense/';
-      
+      const isIncome = showForm === 'income';
+      const endpoint = isIncome
+        ? '/api/finances/add-income/'
+        : '/api/finances/add-expense/';
+  
+      // Build payload conditionally
       const payload = {
         user_id: userId,
-        category: formData.category || (showForm === 'income' ? 'Income' : 'Expense'),
-        title: formData.title,  // Add title to payload
+        title: formData.title,
         date: formData.date,
-        description: formData.description || ''  // Add description to payload, default to empty string if not provided
-      }
-      console.log('Payload:', payload); // Log the payload to check if it's correct
+        description: formData.description || '',
+        amount: parseFloat(formData.amount),
+      };
   
-      // Set amount based on whether the form is income or expense
-      if (showForm === 'income') {
-        payload.amount = parseFloat(formData.amount);
-      } else {
-        payload.amount = parseFloat(formData.amount);
+      // Only include category if it's an expense
+      if (!isIncome) {
+        payload.category = formData.category || 'Expense';
       }
   
-      // Make the API request with the payload
+      console.log('Payload:', payload);
+  
       const response = await axios.post(endpoint, payload);
   
       setMessage(response.data.message || `${showForm} added successfully!`);
       setMessageType('success');
       setShowForm(null);
-      
-      // Refresh data and trigger other component updates
+  
+      // Refresh and update
       await fetchData(userId);
       triggerUpdate();
   
-      // Clear the message after 3 seconds
+      // Clear success message
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -139,6 +141,7 @@ export default function Dashboard() {
       setMessageType('error');
     }
   };
+  
 
   // Chart data
   const doughnutData = {
@@ -192,7 +195,7 @@ export default function Dashboard() {
       />
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <button
           onClick={() => setShowForm('income')}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${
@@ -214,6 +217,17 @@ export default function Dashboard() {
         >
           <Plus className="h-5 w-5" />
           Add Expense
+        </button>
+        <button
+          onClick={() => {}}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${
+            isDark
+              ? 'bg-white hover:bg-gray-600 text-black'
+              : 'bg-gray-900 hover:bg-orange-600 text-white'
+          }`}
+        >
+          <Plus className="h-5 w-5" />
+          Add Monthly Budget
         </button>
         
       </div>

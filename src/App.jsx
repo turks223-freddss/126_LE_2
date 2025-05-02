@@ -9,6 +9,7 @@ import Register from './components/auth/Register';
 import PasswordReset from './components/auth/PasswordReset';
 import Dashboard from './components/dashboard/dashboard';
 import FinanceDetails from './components/dashboard/financeDetails';
+import Budget from './components/dashboard/budget';
 import History from './components/dashboard/history';
 import Reports from './components/dashboard/reports';
 
@@ -109,6 +110,16 @@ function App() {
             }
           />
           <Route
+            path="/budget"
+            element={
+              <PrivateRoute>
+                <DashboardLayout>
+                  <Budget />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/history"
             element={
               <PrivateRoute>
@@ -128,6 +139,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          
 
           {/* Default Route */}
           <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />

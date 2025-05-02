@@ -4,6 +4,7 @@ from rest_framework import status
 from django.conf import settings
 from .models import Income
 from .models import Expense
+from .models import MonthlyBudget
 from django.shortcuts import get_object_or_404
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -14,9 +15,51 @@ from django.core.serializers import serialize
 from rest_framework.decorators import api_view
 from django.db.models.functions import TruncMonth
 from datetime import datetime, timedelta
+from django.db import DatabaseError
+from django.utils import timezone
 
 
 User = get_user_model()
+class SetMonthlyBudgetView(APIView):
+    def post(self, request):
+        user = request.user  # Get the authenticated user
+        title = request.data.get('title')
+        amount = request.data.get('amount')
+        month = request.data.get('month')  # Month (1 to 12)
+        year = request.data.get('year')  # Year (e.g., 2025)
+        description = request.data.get('description')  # Description of the budget (optional)
+
+        missing_fields = []
+        
+        if not title:
+            missing_fields.append('Title')
+        if not amount:
+            missing_fields.append('Amount')
+        if not month:
+            missing_fields.append('Month')
+        if not year:
+            missing_fields.append('Year')
+
+        if missing_fields:
+            return Response({'error': f'Missing required fields: {", ".join(missing_fields)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure that the budget for the user is set for the given month and year
+        try:
+            # If description is None, it will be omitted from the update_or_create
+            budget, created = MonthlyBudget.objects.update_or_create(
+                user=user,
+                title=title,
+                month=month,
+                year=year,
+                defaults={'amount': amount, 'description': description}  # Include description only if provided
+            )
+        except DatabaseError as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if created:
+            return Response({'message': 'Monthly budget set successfully'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'message': 'Monthly budget updated successfully'}, status=status.HTTP_200_OK)
 
 class AddIncomeView(APIView):
     def post(self, request):
@@ -69,6 +112,36 @@ class AddExpenseView(APIView):
             return Response({'message': 'Expense added successfully', 'expense_id': expense.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class MonthlyBudgetCalculatorView(APIView):
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        month = request.data.get('month')  # Expecting a number 1-12
+        year = request.data.get('year')
+
+        if not user_id:
+            return Response({'error': 'user_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not month or not year:
+            return Response({'error': 'month and year are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the month is valid (1-12)
+        if not (1 <= month <= 12):
+            return Response({'error': 'Invalid month. It should be between 1 and 12.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_object_or_404(User, id=user_id)
+
+        # Sum all monthly budget entries for the given month and year
+        total_budget = MonthlyBudget.objects.filter(
+            user=user,
+            month=month,
+            year=year
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Return the total budget for the specified month and year
+        return Response({
+            'total_budget': float(total_budget),
+        }, status=status.HTTP_200_OK)
 
 class BudgetCalculatorView(APIView):
     def post(self, request):
@@ -161,6 +234,23 @@ def finance_details(request, user_id):
     combined_data.sort(key=lambda x: x['date'])
 
     return JsonResponse({'finance': combined_data})
+
+def budget_details(request, user_id):
+    # Fetch all budget data for the given user
+    budgets = MonthlyBudget.objects.filter(user_id=user_id)
+
+    # Serialize the data (you can use a serializer here for better structure)
+    serialized_data = [{
+        'month': budget.month,
+        'title': budget.title,
+        'year': budget.year,
+        'amount': str(budget.amount),  # Ensure proper data formatting
+        'description': budget.description,
+    } for budget in budgets]
+
+    # Return the serialized budget data as JSON
+    return JsonResponse({'budget': serialized_data}, status=200)
+
 
 @api_view(['PATCH'])
 def update_finance_entry(request, user_id, entry_id):

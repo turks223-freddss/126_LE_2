@@ -17,3 +17,18 @@ A modern web application for tracking income, expenses, and managing personal bu
 - React (Frontend)
 - Tailwind CSS
 - Chart.js
+
+## Set-Up Instructions
+
+Make two terminals: 1 for frontend, 1 for backend
+
+-For Frontend:
+npm install
+npm run dev
+*press o + enter*
+
+
+-For Backend:
+setup venv
+activate venv
+pip install requirement.txt

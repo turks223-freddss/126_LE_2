@@ -23,3 +23,14 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.title}: {self.expense} on {self.date}"
+    
+class MonthlyBudget(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='monthly_budgets')
+    title = models.CharField(max_length=20) 
+    month = models.CharField(max_length=7)  
+    year = models.PositiveIntegerField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Budget for {self.month} {self.year} - {self.user}"

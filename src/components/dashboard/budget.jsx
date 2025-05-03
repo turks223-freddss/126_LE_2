@@ -29,6 +29,23 @@ export default function Budget() {
         }
     }, [userId, selectedCategory, dateRange]);
 
+    const handleUpdate = async (userId, entryId, updatedData, onSuccess) => {
+        try {
+            // Make the PATCH request to update the budget 
+            const response = await axios.patch(`/api/finances/${userId}/budget/update/${entryId}/`, updatedData);
+    
+            if (response.status === 200) {
+                alert('Budget entry updated successfully.');
+                if (onSuccess) onSuccess(); // Call the onSuccess callback to refresh or update the UI
+            } else {
+                alert(`Error: ${response.data.error}`);
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            alert('Something went wrong while updating the entry.');
+        }
+    };
+
     const onDelete = async (userId, entryId) => {
         // Confirm the deletion action with the user
         const confirmed = window.confirm('Are you sure you want to delete this budget entry?');
@@ -51,6 +68,34 @@ export default function Budget() {
             console.error(error);
         }
     };
+
+    const [editId, setEditId] = useState(null);
+    const [editForm, setEditForm] = useState({
+        title: '',
+        description: '',
+        amount: '',
+    });
+    
+    const startEditing = (entry,index) => {
+        setEditId({ id: entry.id, index: index });
+        setEditForm({
+            title: entry.title,
+            description: entry.description,
+            category: entry.category,
+            amount: Math.abs(entry.amount),
+            });
+        };
+
+    const cancelEditing = () => {
+        setEditId(null);
+        setEditForm({
+            title: '',
+            description: '',
+            category: '',
+            amount: '',
+            });
+        };
+
     
 
     const fetchBudgetData = async () => {
@@ -92,6 +137,10 @@ export default function Budget() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleChange = (e) => {
+        setEditForm({ ...editForm, [e.target.name]: e.target.value });
     };
 
     const resetFilters = () => {
@@ -140,8 +189,14 @@ export default function Budget() {
                 {/* Budget Table */}
                 <BudgetTable
                 budgetData={budgetData}
+                editId={editId}
+                editForm={editForm} 
                 onDelete={onDelete}
+                handleUpdate={handleUpdate}
+                handleChange={handleChange}
                 userId={userId}
+                startEditing={startEditing}
+                cancelEditing={cancelEditing}
                 />
             </Card>
         </div>

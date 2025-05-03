@@ -311,6 +311,35 @@ def update_finance_entry(request, user_id, entry_id):
 
     except (Income.DoesNotExist, Expense.DoesNotExist):
         return JsonResponse({'error': f'{entry_type.capitalize()} entry not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['PATCH'])
+def update_budget_entry(request, user_id, entry_id):
+    new_title = request.data.get('title')
+    new_description = request.data.get('description')
+    new_amount = request.data.get('amount')
+
+    if not any([new_title, new_description, new_amount]):
+        return JsonResponse(
+            {'error': 'At least one field (title, description, amount) is required for update.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        entry = MonthlyBudget.objects.get(id=entry_id, user_id=user_id)
+
+        if new_title:
+            entry.title = new_title
+        if new_description:
+            entry.description = new_description
+        if new_amount is not None:
+            entry.amount = new_amount
+
+        entry.save()
+
+        return JsonResponse({'message': 'Budget entry updated successfully.'}, status=status.HTTP_200_OK)
+
+    except MonthlyBudget.DoesNotExist:
+        return JsonResponse({'error': 'Budget entry not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
 def delete_finance_entry(request, user_id, entry_id):

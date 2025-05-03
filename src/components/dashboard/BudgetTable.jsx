@@ -12,7 +12,6 @@ const BudgetTable = ({
     onDelete,
     userId,
 }) => {
-    console.log('budgetData:', budgetData);
     // Handle update directly (without local state)
     const handleUpdateClick = (id, updatedForm) => {
         handleUpdate(userId, id, updatedForm, cancelEditing);
@@ -89,7 +88,7 @@ const BudgetTable = ({
                                     {editId?.id === item.id && editId?.index === index ? (
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => handleUpdateClick(item.id, editForm)}
+                                                onClick={() => {handleUpdateClick(item.id, editForm); window.location.reload();}}
                                                 className="text-green-500 hover:text-white hover:bg-green-500 rounded-full p-1 transition-all duration-200"
                                             >
                                                 <Check className="h-5 w-5" />

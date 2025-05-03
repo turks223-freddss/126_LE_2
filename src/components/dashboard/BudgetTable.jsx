@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Edit, Trash, Check, X } from "lucide-react";
 
 const BudgetTable = ({
@@ -12,21 +12,10 @@ const BudgetTable = ({
     handleDelete,
     userId,
 }) => {
-    const [localBudgetData, setLocalBudgetData] = useState(budgetData); // Local state for budget data
-    
-    // Handle delete (removes item from local state)
-    const handleDeleteClick = (id) => {
-        handleDelete(userId, id); // Call the delete function
-        setLocalBudgetData(localBudgetData.filter(item => item.id !== id)); // Remove item from local state
-    };
-    
-    // Handle update (updates item in local state)
+    console.log('budgetData:', budgetData);
+    // Handle update directly (without local state)
     const handleUpdateClick = (id, updatedForm) => {
         handleUpdate(userId, id, updatedForm, cancelEditing);
-        const updatedData = localBudgetData.map(item => 
-            item.id === id ? { ...item, ...updatedForm } : item
-        );
-        setLocalBudgetData(updatedData); // Update the table with updated values
     };
 
     return (
@@ -42,15 +31,17 @@ const BudgetTable = ({
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                    {localBudgetData.length === 0 ? (
+                    {budgetData.length === 0 ? (
                         <tr>
                             <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
                                 No budget entries found
                             </td>
                         </tr>
                     ) : (
-                        localBudgetData.map((item, index) => (
-                            <tr key={index} className="hover:bg-orange-50 transition-all">
+                        budgetData.map((item, index) => (
+                            <tr 
+                            key={index} 
+                            className="hover:bg-orange-50 transition-all">
                                 <td className="px-4 py-3 font-medium">
                                     {`${item.month} ${item.year}`}
                                 </td>
@@ -117,7 +108,7 @@ const BudgetTable = ({
                                                 <Edit className="h-5 w-5" />
                                             </button>
                                             <button
-                                                onClick={() => handleDeleteClick(item.id)}
+                                                onClick={() => handleDelete(userId, item.id)}
                                                 className="text-red-500 hover:text-red-700"
                                             >
                                                 <Trash className="h-5 w-5" />

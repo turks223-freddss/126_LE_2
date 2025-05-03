@@ -325,32 +325,41 @@ def delete_budget_entry(request, user_id, entry_id):
 @api_view(['GET'])
 def get_reports(request, user_id):
     try:
-        # Get expense categories data
-        expense_categories = Expense.objects.filter(
-            user_id=user_id
-        ).values('category').annotate(
+        # Get filters from query params
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        category = request.GET.get('category')
+
+        # Expense categories (filtered if needed)
+        expense_qs = Expense.objects.filter(user_id=user_id)
+        if start_date and end_date:
+            expense_qs = expense_qs.filter(date__range=[start_date, end_date])
+        if category and category != 'all':
+            expense_qs = expense_qs.filter(category=category)
+        expense_categories = expense_qs.values('category').annotate(
             total=Sum('expense')
         ).order_by('-total')
 
-        # Get monthly data for the last 6 months
+        # Monthly data (filtered if needed)
+        monthly_expense_qs = Expense.objects.filter(user_id=user_id)
+        if start_date and end_date:
+            monthly_expense_qs = monthly_expense_qs.filter(date__range=[start_date, end_date])
+        if category and category != 'all':
+            monthly_expense_qs = monthly_expense_qs.filter(category=category)
         six_months_ago = datetime.now() - timedelta(days=180)
-        monthly_data = Expense.objects.filter(
-            user_id=user_id,
-            date__gte=six_months_ago
-        ).annotate(
+        monthly_expense_qs = monthly_expense_qs.filter(date__gte=six_months_ago)
+        monthly_data = monthly_expense_qs.annotate(
             month=TruncMonth('date')
         ).values('month', 'category').annotate(
             total=Sum('expense')
         ).order_by('month')
 
-        # Process monthly data into income vs expenses format
+        # Process monthly data into income vs expenses format (expenses only, as before)
         processed_monthly_data = []
         current_month = None
         month_data = {'income': 0, 'expenses': 0}
-
         for item in monthly_data:
             month_str = item['month'].strftime('%B %Y')
-            
             if current_month != month_str:
                 if current_month:
                     processed_monthly_data.append({
@@ -360,13 +369,10 @@ def get_reports(request, user_id):
                     })
                 current_month = month_str
                 month_data = {'income': 0, 'expenses': 0}
-            
             if item['category'] == 'income':
                 month_data['income'] = item['total']
             else:
                 month_data['expenses'] = item['total']
-
-        # Add the last month
         if current_month:
             processed_monthly_data.append({
                 'month': current_month,
@@ -374,10 +380,34 @@ def get_reports(request, user_id):
                 'expenses': month_data['expenses']
             })
 
+        # Calculate total income and expenses (filtered if needed)
+        income_qs = Income.objects.filter(user_id=user_id)
+        expense_qs = Expense.objects.filter(user_id=user_id)
+        if start_date and end_date:
+            income_qs = income_qs.filter(date__range=[start_date, end_date])
+            expense_qs = expense_qs.filter(date__range=[start_date, end_date])
+        if category and category != 'all':
+            income_qs = income_qs.filter(category=category)
+            expense_qs = expense_qs.filter(category=category)
+        total_income = income_qs.aggregate(total=Sum('income'))['total'] or 0
+        total_expenses = expense_qs.aggregate(total=Sum('expense'))['total'] or 0
+
+        # Overall income vs expenses for bar chart
+        overall_income_vs_expenses = {
+            'income': float(total_income),
+            'expenses': float(total_expenses)
+        }
+
+        # Overall expense categories for pie chart
+        overall_expense_categories = list(expense_qs.values('category').annotate(total=Sum('expense')).order_by('-total'))
+
         return Response({
             'expense_categories': list(expense_categories),
-            'monthly_data': processed_monthly_data
+            'monthly_data': processed_monthly_data,
+            'total_income': float(total_income),
+            'total_expenses': float(total_expenses),
+            'overall_income_vs_expenses': overall_income_vs_expenses,
+            'overall_expense_categories': overall_expense_categories
         })
-
     except Exception as e:
         return Response({'error': str(e)}, status=400)

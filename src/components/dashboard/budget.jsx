@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import BudgetTable from './BudgetTable';  // Your BudgetTable component
-import Card from '../ui/Card'; // Assuming you have a Card component
+import BudgetTable from './BudgetTable';  
+import MonthlyBudgetForm from './AddBudgetForm';
+import Card from '../ui/Card'; 
+import { useTheme } from '../../contexts/ThemeContext';
+import { Plus } from 'lucide-react';
 
 export default function Budget() {
     const [userId, setUserId] = useState(null);
     const [budgetData, setBudgetData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { isDark } = useTheme();
+    const [showForm, setShowForm] = useState(null);
 
     // Filter states
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -28,6 +33,36 @@ export default function Budget() {
             fetchBudgetData();
         }
     }, [userId, selectedCategory, dateRange]);
+
+    const handleBudgetSubmit = async (formData) => {
+        try {
+            const [year, month] = formData.date.split('-');
+        
+            const payload = {
+                title: formData.title,
+                amount: parseFloat(formData.amount),
+                category: formData.category,
+                month: parseInt(month), 
+                year: parseInt(year),
+                description: formData.description || '',  
+            };
+        
+            console.log('Payload:', payload); 
+        
+            const response = await axios.post('/api/finances/set-monthly-budget/', payload);
+            console.log('Budget set successfully:', response.data);
+            setShowForm(null);
+            window.location.reload();
+            } catch (error) {
+            console.error('Error submitting budget:', error);
+            if (error.response) {
+                console.error('Error response data:', error.response.data);
+                setMessage(`Error: ${error.response?.data?.error || 'Unknown error'}`);
+            } else {
+                setMessage('Unknown error occurred.');
+            }
+            }
+        };
 
     const handleUpdate = async (userId, entryId, updatedData, onSuccess) => {
         try {
@@ -167,11 +202,13 @@ export default function Budget() {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Budget Overview</h1>
                     <div className="flex items-center gap-4">
+                        
                         <button
-                            onClick={() => {}}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            onClick={() => setShowForm('monthlyBudget')}
+                            className={`flex items-center gap-2 px-4 py-2 bg-white hover:bg-orange-400 hover:text-white text-whitetext-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors`}
                         >
-                            Export CSV
+                            <Plus className="h-5 w-5" />
+                            Add Monthly Budget
                         </button>
                         <button
                             onClick={() => {}}
@@ -200,6 +237,13 @@ export default function Budget() {
                 cancelEditing={cancelEditing}
                 />
             </Card>
+
+            {showForm === 'monthlyBudget' && (
+                <MonthlyBudgetForm
+                    onSubmit={handleBudgetSubmit}
+                    onCancel={() => setShowForm(null)}
+                />
+            )}
         </div>
     );
 }

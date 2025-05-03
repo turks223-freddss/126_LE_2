@@ -387,40 +387,33 @@ export default function Reports() {
           </Card>
 
           {/* Expense Categories */}
-          <Card className="p-6">
+          <Card className="flex flex-col h-full p-6">
             <div className="flex items-center mb-4">
               <PieChart className="w-6 h-6 mr-2" />
               <h2 className="text-xl font-semibold">Expense Categories</h2>
             </div>
-            <div className="h-[400px] flex items-center justify-center">
-              <div className="w-[350px]">
-                <Pie data={pieChartData} options={{
-                  ...chartOptions,
-                  maintainAspectRatio: true,
-                  responsive: true,
-                  plugins: {
-                    ...chartOptions.plugins,
-                    legend: {
-                      position: 'right',
-                      align: 'center',
-                      labels: {
-                        boxWidth: 15,
-                        padding: 15,
-                        font: {
-                          size: 12
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-[400px]">
+                <Pie
+                  data={pieChartData}
+                  options={{
+                    maintainAspectRatio: true,
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'right',
+                        labels: {
+                          padding: 20,
+                          font: {
+                            size: 12
+                          },
+                          usePointStyle: true,
+                          boxWidth: 10
                         }
                       }
                     }
-                  },
-                  scales: {
-                    x: {
-                      display: false
-                    },
-                    y: {
-                      display: false
-                    }
-                  }
-                }} />
+                  }}
+                />
               </div>
             </div>
           </Card>

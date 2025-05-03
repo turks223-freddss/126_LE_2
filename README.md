@@ -158,9 +158,27 @@ budget-tracker/
 │   └── requirements.txt # Python dependencies
 ├── src/                 # React frontend
 │   ├── components/     # React components
-│   ├── contexts/       # React contexts
-│   └── App.jsx         # Main app component
-├── public/             # Static files
+│   │   ├── auth/      # Authentication components
+│   │   ├── dashboard/ # Dashboard components
+│   │   ├── finance/   # Financial components
+│   │   │   ├── AddBudgetForm.jsx
+│   │   │   ├── BudgetSummary.jsx
+│   │   │   ├── BudgetTable.jsx
+│   │   │   ├── FinanceForm.jsx
+│   │   │   ├── FinanceItem.jsx
+│   │   │   ├── TransactionForm.jsx
+│   │   │   ├── TransactionHistory.jsx
+│   │   │   ├── TransactionTable.jsx
+│   │   │   └── financeDetails.jsx
+│   │   ├── layout/    # Layout components
+│   │   └── ui/        # Reusable UI components
+│   ├── contexts/      # React contexts
+│   │   ├── AuthContext.jsx
+│   │   ├── FinanceContext.jsx
+│   │   └── ThemeContext.jsx
+│   ├── App.jsx        # Main app component
+│   ├── main.jsx       # Application entry point
+│   └── index.css      # Global styles
 └── package.json        # Node dependencies
 ```
 

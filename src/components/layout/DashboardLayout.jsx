@@ -25,7 +25,6 @@ const DashboardLayout = ({ children }) => {
     { name: 'Budget', href: '/budget', icon: Wallet },
     { name: 'History', href: '/history', icon: History },
     { name: 'Reports', href: '/reports', icon: BarChart2 },
-    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
   const handleLogout = async () => {

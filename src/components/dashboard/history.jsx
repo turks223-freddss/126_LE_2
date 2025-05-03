@@ -231,6 +231,7 @@ export default function History() {
           selectedType={selectedType}
           setSelectedType={setSelectedType}
           resetFilters={resetFilters}
+          filterOptions={['type', 'date', 'category']}
         />
       )}
 

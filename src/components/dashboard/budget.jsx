@@ -4,7 +4,8 @@ import BudgetTable from './BudgetTable';
 import MonthlyBudgetForm from './AddBudgetForm';
 import Card from '../ui/Card'; 
 import { useTheme } from '../../contexts/ThemeContext';
-import { Plus } from 'lucide-react';
+import Filters from '../ui/HistoryFilter'; 
+import { Plus, Filter} from 'lucide-react';
 
 export default function Budget() {
     const [userId, setUserId] = useState(null);
@@ -13,12 +14,14 @@ export default function Budget() {
     const [error, setError] = useState(null);
     const { isDark } = useTheme();
     const [showForm, setShowForm] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
 
     // Filter states
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedMonth, setSelectedMonth] = useState('all');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [availableCategories, setAvailableCategories] = useState([]);
-
+    
     // Fetch the user ID (could be from context or localStorage)
     useEffect(() => {
         const storedUserId = localStorage.getItem('user_id');
@@ -32,7 +35,7 @@ export default function Budget() {
         if (userId) {
             fetchBudgetData();
         }
-    }, [userId, selectedCategory, dateRange]);
+    }, [userId, selectedMonth, selectedCategory, dateRange]);
 
     const handleBudgetSubmit = async (formData) => {
         try {
@@ -138,34 +141,36 @@ export default function Budget() {
         try {
             setLoading(true);
             let url = `/api/finances/${userId}/budget/`;
-
-            // Add query parameters for filters
+    
             const params = new URLSearchParams();
-
-            if (dateRange.start && dateRange.end) {
-                params.append('start_date', dateRange.start);
-                params.append('end_date', dateRange.end);
-            }
+    
+    
             if (selectedCategory !== 'all') {
                 params.append('category', selectedCategory);
             }
-
+    
+            if (selectedMonth !== 'all') {
+                params.append('month_year', selectedMonth);  // e.g. "5-2025"
+            }
+    
             if (params.toString()) {
                 url += `?${params.toString()}`;
             }
+            
+            console.log('Request URL:', url);
+            console.log('Selected month-year filter:', selectedMonth);
 
             const response = await axios.get(url);
-
+    
             if (response.data.budget) {
                 const sortedData = response.data.budget.sort((a, b) =>
                     new Date(b.year, b.month - 1) - new Date(a.year, a.month - 1)
                 );
                 setBudgetData(sortedData);
-
-                // Optionally, define your categories (hardcoded or fetched)
-                setAvailableCategories(['Rent', 'Groceries', 'Utilities', 'Transport', 'Savings', 'Misc']);
+    
+                setAvailableCategories(['Food', 'Transport', 'Utilities', 'Entertainment', 'Misc']);
             }
-
+    
             setError(null);
         } catch (error) {
             console.error('Error fetching budget data:', error);
@@ -174,14 +179,15 @@ export default function Budget() {
             setLoading(false);
         }
     };
+        
 
     const handleChange = (e) => {
         setEditForm({ ...editForm, [e.target.name]: e.target.value });
     };
 
     const resetFilters = () => {
+        setSelectedMonth('all')
         setSelectedCategory('all');
-        setDateRange({ start: '', end: '' });
     };
 
     if (loading) {
@@ -211,17 +217,29 @@ export default function Budget() {
                             Add Monthly Budget
                         </button>
                         <button
-                            onClick={() => {}}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                        >
-                            Toggle Filters
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 shadow hover:shadow-md hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                            >
+                            <Filter className="h-5 w-5" />
+                            <span className="hidden sm:inline">Filters</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Filters (optional) */}
-                {false && (
-                    <div className="text-gray-500">Filter UI placeholder</div>
+                {/* Filters Section */}
+                {showFilters && (
+                <Filters
+                    budgetData={budgetData}
+                    dateRange={dateRange}
+                    setDateRange={setDateRange}
+                    selectedCategory={selectedCategory}
+                    selectedMonth = {selectedMonth}
+                    setSelectedMonth={setSelectedMonth} 
+                    setSelectedCategory={setSelectedCategory}
+                    availableCategories={availableCategories}
+                    resetFilters={resetFilters}
+                    filterOptions={['month', 'category']}
+                />
                 )}
 
                 {/* Budget Table */}

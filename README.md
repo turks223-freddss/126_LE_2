@@ -3,6 +3,7 @@
 A modern web application for tracking income, expenses, and managing personal budgets with intuitive charts and summaries. This application helps users maintain their financial health by providing detailed insights into their spending patterns and budget management.
 
 ## 🌟 Features
+  For a more detailed feature description, file functionality descriptions, and distribution of tasks: https://docs.google.com/document/d/1Xr-hatRHuvvTij3U2Os7m6qQfQAFnuY6gUu7oQXu1Z0/edit?usp=sharing
 
 - **User Authentication**
   - Secure login and registration system
@@ -197,8 +198,3 @@ budget-tracker/
    - Use Django admin interface at `http://localhost:8000/admin`
    - Create superuser: `python manage.py createsuperuser`
 
-## 🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-This project is licensed under the MIT License - see the LICENSE file for details.

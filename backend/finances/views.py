@@ -24,11 +24,12 @@ from decimal import InvalidOperation
 User = get_user_model()
 class SetMonthlyBudgetView(APIView):
     def post(self, request):
-        user = request.user  # Get the authenticated user
+        user_id = request.data.get('user_id')
+        user = get_object_or_404(User, id=user_id)
         title = request.data.get('title')
         category = request.data.get('category', 'expenses')
         amount = request.data.get('amount')
-        month = request.data.get('month')  # Month (1 to 12)
+        month = str(request.data.get('month')).zfill(2)  # Month (01 to 12)
         year = request.data.get('year')  # Year (e.g., 2025)
         description = request.data.get('description')  # Description of the budget (optional)
 
@@ -122,7 +123,7 @@ class AddExpenseView(APIView):
 class MonthlyBudgetCalculatorView(APIView):
     def post(self, request):
         user_id = request.data.get('user_id')
-        month = request.data.get('month')  # Expecting a number 1-12
+        month = str(request.data.get('month')).zfill(2)  # Ensure two digits
         year = request.data.get('year')
 
         if not user_id:
@@ -132,7 +133,7 @@ class MonthlyBudgetCalculatorView(APIView):
             return Response({'error': 'month and year are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ensure the month is valid (1-12)
-        if not (1 <= month <= 12):
+        if not (1 <= int(month) <= 12):
             return Response({'error': 'Invalid month. It should be between 1 and 12.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(User, id=user_id)
@@ -163,25 +164,80 @@ class BudgetCalculatorView(APIView):
 
         user = get_object_or_404(User, id=user_id)
 
-        # Sum all incomes within date range
+        # Always use two-digit month string for filtering
+        month = str(datetime.strptime(start_date, '%Y-%m-%d').month).zfill(2)
+        year = datetime.strptime(start_date, '%Y-%m-%d').year
+
+        # Get all categories from MonthlyBudget
+        budget_categories = MonthlyBudget.objects.filter(
+            user=user,
+            month=month,
+            year=year
+        ).values('category').distinct()
+
+        category_budgets = {}
+        category_expenses = {}
+        category_alerts = {}
+
+        # Calculate budget and expenses for each category
+        for category in budget_categories:
+            category_name = category['category']
+            
+            # Get budget for this category
+            budget_amount = MonthlyBudget.objects.filter(
+                user=user,
+                category=category_name,
+                month=month,
+                year=year
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            # Get expenses for this category
+            expense_amount = Expense.objects.filter(
+                user=user,
+                category=category_name,
+                date__range=[start_date, end_date]
+            ).aggregate(total=Sum('expense'))['total'] or 0
+
+            category_budgets[category_name] = float(budget_amount)
+            category_expenses[category_name] = float(expense_amount)
+
+            # Calculate budget usage percentage
+            if budget_amount > 0:
+                usage_percentage = (expense_amount / budget_amount) * 100
+                if usage_percentage >= 100:
+                    category_alerts[category_name] = {
+                        'status': 'exceeded',
+                        'percentage': usage_percentage,
+                        'remaining': float(budget_amount - expense_amount)
+                    }
+                elif usage_percentage >= 80:
+                    category_alerts[category_name] = {
+                        'status': 'warning',
+                        'percentage': usage_percentage,
+                        'remaining': float(budget_amount - expense_amount)
+                    }
+
+        # Calculate overall totals
         total_income = Income.objects.filter(
             user=user,
             date__range=[start_date, end_date]
         ).aggregate(total=Sum('income'))['total'] or 0
 
-        # Sum all expenses within date range
         total_expense = Expense.objects.filter(
             user=user,
             date__range=[start_date, end_date]
         ).aggregate(total=Sum('expense'))['total'] or 0
 
-        # Calculate budget
+        total_budget = sum(category_budgets.values())
         budget = total_income - total_expense
 
         return Response({
             'total_income': float(total_income),
             'total_expense': float(total_expense),
-            'budget': float(budget)
+            'budget': float(budget),
+            'category_budgets': category_budgets,
+            'category_expenses': category_expenses,
+            'category_alerts': category_alerts
         }, status=status.HTTP_200_OK)
         
 def finance_details(request, user_id):

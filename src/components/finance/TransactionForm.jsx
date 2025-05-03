@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 const MAX_DESCRIPTION_LENGTH = 50;
-const MAX_TITLE_LENGTH = 20; // Title max length
+const MAX_TITLE_LENGTH = 20;
+const MAX_AMOUNT_LENGTH = 7;
 
 const TransactionForm = ({ type, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -14,13 +15,14 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
   });
 
   const [error, setError] = useState('');
-  const [titleError, setTitleError] = useState(''); 
-  const [shakeError, setShakeError] = useState(false); 
-  const [shakeTitleError, setShakeTitleError] = useState(false); 
+  const [titleError, setTitleError] = useState('');
+  const [amountError, setAmountError] = useState('');
+  const [shakeError, setShakeError] = useState(false);
+  const [shakeTitleError, setShakeTitleError] = useState(false);
+  const [shakeAmountError, setShakeAmountError] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     let formValid = true;
 
     if (formData.title.length > MAX_TITLE_LENGTH) {
@@ -31,11 +33,16 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
       setTitleError('');
     }
 
+    if (formData.amount.length > MAX_AMOUNT_LENGTH) {
+      setAmountError(`Amount cannot exceed ${MAX_AMOUNT_LENGTH} characters.`);
+      setShakeAmountError(true);
+      formValid = false;
+    } else {
+      setAmountError('');
+    }
+
     if (error) {
       setShakeError(true);
-      setTimeout(() => {
-        setShakeError(false); 
-      }, 500);
       formValid = false;
     }
 
@@ -43,11 +50,11 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
       onSubmit(formData);
     }
 
-    if (shakeTitleError) {
-      setTimeout(() => {
-        setShakeTitleError(false);
-      }, 500);
-    }
+    setTimeout(() => {
+      setShakeTitleError(false);
+      setShakeAmountError(false);
+      setShakeError(false);
+    }, 500);
   };
 
   const handleChange = (e) => {
@@ -67,6 +74,14 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
         setTitleError(`Title cannot exceed ${MAX_TITLE_LENGTH} characters.`);
       } else {
         setTitleError('');
+      }
+    }
+
+    if (name === 'amount') {
+      if (value.length > MAX_AMOUNT_LENGTH) {
+        setAmountError(`Amount cannot exceed ${MAX_AMOUNT_LENGTH} characters.`);
+      } else {
+        setAmountError('');
       }
     }
   };
@@ -114,33 +129,36 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
               name="amount"
               value={formData.amount}
               onChange={handleChange}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${shakeAmountError ? 'shake-error' : ''}`}
               required
             />
+            {amountError && (
+              <span className="text-red-500 text-sm">{amountError}</span>
+            )}
           </div>
 
           {/* Category Input */}
           {type === 'expense' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              Category
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select a category</option>
-              <option value="Food">Food</option>
-              <option value="Transport">Transport</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Miscellanous">Miscellanous</option>
-            </select>
-          </div>
-        )}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Category
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select a category</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Miscellanous">Miscellanous</option>
+              </select>
+            </div>
+          )}
 
           {/* Date Input */}
           <div>
@@ -177,6 +195,7 @@ const TransactionForm = ({ type, onSubmit, onCancel }) => {
             </div>
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-4 pt-4">
             <button
               type="submit"

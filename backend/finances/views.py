@@ -243,10 +243,41 @@ def finance_details(request, user_id):
 
 def budget_details(request, user_id):
     try:
-        # Fetch the budget entries for the user
+        # Get filters from query parameters
+        category_filter = request.GET.get('category', None)
+        month_year_filter = request.GET.get('month_year', None)
+
+        # Print the filters received in the request
+        print(f"Received Filters: category={category_filter}, month_year={month_year_filter}")
+
+        # Start with base queryset
         budgets = MonthlyBudget.objects.filter(user_id=user_id)
 
-        # Even if empty, just return an empty list — no 404
+        # Apply category filter if present
+        if category_filter:
+            budgets = budgets.filter(category=category_filter)
+
+        # Apply month-year filter if present
+        if month_year_filter:
+            try:
+                # Split the month_year filter into month and year
+                month_str, year_str = month_year_filter.split('-')
+                month = str(month_str)  # month should remain as a string (since it's stored as CharField in the model)
+                year = int(year_str)
+
+                # Print out the filters being applied to the queryset
+                print(f"Applying Filter: month={month}, year={year}")
+
+                # Perform the filtering with month as a string and year as integer
+                budgets = budgets.filter(month=month, year=year)
+
+            except (ValueError, TypeError):
+                print(f"Invalid month_year parameter: {month_year_filter}")
+
+        # Print the final queryset
+        print(f"Final Queryset: {budgets.query}")
+
+        # Serialize data
         serialized_data = []
         for budget in budgets:
             try:
@@ -269,6 +300,7 @@ def budget_details(request, user_id):
     except Exception as e:
         print(f"Error fetching budget data for user {user_id}: {e}")
         return JsonResponse({'error': 'Internal server error.'}, status=500)
+
 
 
 

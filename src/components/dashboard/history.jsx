@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { exportToCSV } from '../../contexts/FinanceContext';
 import Card from '../ui/Card';
 import Filters from '../ui/HistoryFilter'; 
-import TransactionTable from "./TransactionTable";
+import TransactionTable from "../finance/TransactionTable";
 import { Filter, Download } from 'lucide-react';
 
 

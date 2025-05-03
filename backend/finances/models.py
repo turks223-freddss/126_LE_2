@@ -3,7 +3,7 @@ from users.models import CustomUser
 
 class Income(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='incomes')
-    title = models.CharField(max_length=100)  # New field: required, max 100 chars
+    title = models.CharField(max_length=100)  # Made required
     description = models.TextField(null=True, blank=True)  # New field: optional
     category = models.CharField(max_length=50, default='income')
     income = models.DecimalField(max_digits=10, decimal_places=2)
@@ -15,7 +15,7 @@ class Income(models.Model):
 
 class Expense(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='expenses')
-    title = models.CharField(max_length=100)  # New field: required, max 100 chars
+    title = models.CharField(max_length=100)  # Made required
     description = models.TextField(null=True, blank=True)  # New field: optional
     category = models.CharField(max_length=50, default='expenses')
     expense = models.DecimalField(max_digits=10, decimal_places=2)

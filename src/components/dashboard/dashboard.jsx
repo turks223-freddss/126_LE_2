@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './sidebar';
 import BudgetSummary from './BudgetSummary';
 import TransactionForm from './TransactionForm';
-import MonthlyBudgetForm from './AddBudgetForm';
 import TransactionHistory from './TransactionHistory';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -64,36 +63,6 @@ export default function Dashboard() {
       end: lastDay.toISOString().split('T')[0]
     };
   };
-
-  const handleBudgetSubmit = async (formData) => {
-    try {
-      const [year, month] = formData.date.split('-');
-
-      const payload = {
-        title: formData.title,
-        amount: parseFloat(formData.amount),
-        category: formData.category,
-        month: parseInt(month), 
-        year: parseInt(year),
-        description: formData.description || '',  
-      };
-  
-      console.log('Payload:', payload); 
-  
-      const response = await axios.post('/api/finances/set-monthly-budget/', payload);
-      console.log('Budget set successfully:', response.data);
-      setShowForm(null);
-    } catch (error) {
-      console.error('Error submitting budget:', error);
-      if (error.response) {
-        console.error('Error response data:', error.response.data);
-        setMessage(`Error: ${error.response?.data?.error || 'Unknown error'}`);
-      } else {
-        setMessage('Unknown error occurred.');
-      }
-    }
-  };
-
 
   const fetchData = async (userId) => {
     try {
@@ -249,37 +218,15 @@ export default function Dashboard() {
           <Plus className="h-5 w-5" />
           Add Expense
         </button>
-        <button
-          onClick={() => setShowForm('monthlyBudget')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${
-            isDark
-              ? 'bg-white hover:bg-gray-600 text-black'
-              : 'bg-gray-900 hover:bg-orange-600 text-white'
-          }`}
-        >
-          <Plus className="h-5 w-5" />
-          Add Monthly Budget
-        </button>
-        
       </div>
 
       {/* Transaction Form Modal */}
-      {showForm && (
-        <>
-          {/* Handle different forms based on the showForm value */}
-          {showForm === 'income' || showForm === 'expense' ? (
-            <TransactionForm
-              type={showForm} // Set the type (income or expense)
-              onSubmit={handleTransaction} // Handle the transaction submission
-              onCancel={() => setShowForm(null)} // Close modal
-            />
-          ) : showForm === 'monthlyBudget' ? (
-            <MonthlyBudgetForm
-              onSubmit={handleBudgetSubmit} // Monthly Budget submission handler
-              onCancel={() => setShowForm(null)} // Close modal
-            />
-          ) : null}
-        </>
+      {(showForm === 'income' || showForm === 'expense') && (
+        <TransactionForm
+          type={showForm} // Set the type (income or expense)
+          onSubmit={handleTransaction} // Handle the transaction submission
+          onCancel={() => setShowForm(null)} // Close modal
+        />
       )}
 
 

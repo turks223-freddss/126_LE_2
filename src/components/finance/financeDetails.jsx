@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Card from '../ui/Card';
 import List from '../ui/List';
-import FinanceItem from '../ui/FinanceItem';
-import FinanceForm from '../ui/FinanceForm';
+import FinanceItem from './FinanceItem';
+import FinanceForm from './FinanceForm';
 
 const FinanceDetails = ({ userId }) => {
   const [financeData, setFinanceData] = useState(null);

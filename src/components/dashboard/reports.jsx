@@ -295,7 +295,7 @@ export default function Reports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Income</p>
-                <p className="text-2xl font-bold">${metrics.totalIncome.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₱{metrics.totalIncome.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-full">
                 <DollarSign className="w-6 h-6 text-green-600" />
@@ -307,7 +307,7 @@ export default function Reports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Expenses</p>
-                <p className="text-2xl font-bold">${metrics.totalExpenses.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₱{metrics.totalExpenses.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-red-100 rounded-full">
                 <DollarSign className="w-6 h-6 text-red-600" />

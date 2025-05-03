@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import BudgetTable from './BudgetTable';  
-import MonthlyBudgetForm from './AddBudgetForm';
+import BudgetTable from '../finance/BudgetTable';  
+import MonthlyBudgetForm from '../finance/AddBudgetForm';
 import Card from '../ui/Card'; 
 import { useTheme } from '../../contexts/ThemeContext';
 import Filters from '../ui/HistoryFilter'; 
@@ -211,7 +211,7 @@ export default function Budget() {
                         
                         <button
                             onClick={() => setShowForm('monthlyBudget')}
-                            className={`flex items-center gap-2 px-4 py-2 bg-white hover:bg-orange-400 hover:text-white text-whitetext-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors`}
+                            className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 text-sm font-medium border border-gray-300 rounded-lg hover:bg-orange-400 hover:text-white transition-colors"
                         >
                             <Plus className="h-5 w-5" />
                             Add Monthly Budget

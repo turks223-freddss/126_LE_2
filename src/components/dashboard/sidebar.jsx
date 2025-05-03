@@ -7,84 +7,71 @@ import {
     LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function Sidebar({ active }) {
-const navigate = useNavigate();
-const { logout } = useAuth();
+    const navigate = useNavigate();
+    const { logout } = useAuth();
+    const { isDark } = useTheme();
 
-const linkClass = (name) =>
-`block w-full py-2 rounded-md transition-colors ${
-    active === name ? 'bg-orange-700 font-semibold' : 'hover:bg-gray-700'
-}`;
+    const linkClass = (name) =>
+        `flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+            active === name
+                ? 'bg-blue-50 text-blue-600'
+                : `${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-50'}`
+        }`;
 
-const handleLogout = async () => {
-try {
-    await logout();
-    navigate('/');
-} catch (error) {
-    console.error('Logout failed:', error);
-}
-};
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
 
-return (
-<div className="fixed top-0 left-0 h-screen w-16 md:w-64 bg-gray-800 text-white flex flex-col p-4 transition-all duration-300 z-50">
-    <div className="text-2xl font-bold mb-10 tracking-wide pl-0 md:pl-4 hidden md:block">
-    Budget Tracker
-    </div>
+    return (
+        <div className={`hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0`}>
+            <div className={`flex flex-col flex-grow ${isDark ? 'bg-gray-800' : 'bg-white'} border-r ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className={`flex items-center h-16 px-4 ${isDark ? 'bg-blue-600' : 'bg-blue-500'}`}>
+                    <span className="text-white font-semibold text-lg">Budget Tracker</span>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                    <nav className="px-2 py-4">
+                        <Link
+                            to="/dashboard"
+                            className={linkClass('dashboard')}
+                        >
+                            <LayoutDashboard className="mr-3 h-5 w-5" />
+                            Dashboard
+                        </Link>
 
-    <nav className="flex-1">
-    <ul className="space-y-3">
-        <li>
-        <Link
-            to="/dashboard"
-            className={`${linkClass('dashboard')} flex items-center gap-3 justify-center md:justify-start pl-0 md:pl-4`}
-        >
-            <LayoutDashboard size={20} />
-            <span className="hidden md:inline flex-1 text-left">Dashboard</span>
-        </Link>
-        </li>
+                        <Link
+                            to="/budget"
+                            className={linkClass('budget')}
+                        >
+                            <Wallet className="mr-3 h-5 w-5" />
+                            Budget
+                        </Link>
 
-        <li>
-        <Link
-            to="/budget"
-            className={`${linkClass('budget')} flex items-center gap-3 justify-center md:justify-start pl-0 md:pl-4`}
-        >
-            <Wallet size={20} />
-            <span className="hidden md:inline flex-1 text-left">Budget</span>
-        </Link>
-        </li>
+                        <Link
+                            to="/history"
+                            className={linkClass('history')}
+                        >
+                            <History className="mr-3 h-5 w-5" />
+                            Transactions
+                        </Link>
 
-        <li>
-        <Link
-            to="/history"
-            className={`${linkClass('history')} flex items-center gap-3 justify-center md:justify-start pl-0 md:pl-4`}
-        >
-            <History size={20} />
-            <span className="hidden md:inline flex-1 text-left">Transactions</span>
-        </Link>
-        </li>
-
-        <li>
-        <Link
-            to="/reports"
-            className={`${linkClass('reports')} flex items-center gap-3 justify-center md:justify-start pl-0 md:pl-4`}
-        >
-            <BarChart size={20} />
-            <span className="hidden md:inline flex-1 text-left">Reports</span>
-        </Link>
-        </li>
-    </ul>
-    </nav>
-
-    <div className="pt-6">
-    <button
-        onClick={handleLogout}
-        className="relative w-full bg-red-600 hover:bg-red-500 transition-colors text-white py-2 rounded-md font-semibold flex items-center justify-center md:justify-start pl-0 md:pl-4"
-    >
-        <LogOut size={20} className="mr-0 md:mr-2" />
-        <span className="hidden md:inline">Log Out</span>
-    </button>
-    </div>
-</div>
-);
+                        <Link
+                            to="/reports"
+                            className={linkClass('reports')}
+                        >
+                            <BarChart className="mr-3 h-5 w-5" />
+                            Reports
+                        </Link>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    );
 }

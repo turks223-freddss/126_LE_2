@@ -211,11 +211,11 @@ export default function History() {
               Export CSV
             </button>
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             >
-              <Filter className="h-5 w-5" />
-              Filters
+                <Filter className="h-5 w-5" />
+                <span className="hidden md:block">Filters</span> {/* Only visible on medium and larger screens */}
             </button>
           </div>
         </div>

@@ -8,7 +8,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import PasswordReset from './components/auth/PasswordReset';
 import Dashboard from './components/dashboard/dashboard';
-import FinanceDetails from './components/dashboard/financeDetails';
+import FinanceDetails from './components/finance/financeDetails';
 import Budget from './components/dashboard/budget';
 import History from './components/dashboard/history';
 import Reports from './components/dashboard/reports';

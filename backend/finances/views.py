@@ -24,8 +24,7 @@ from decimal import InvalidOperation
 User = get_user_model()
 class SetMonthlyBudgetView(APIView):
     def post(self, request):
-        user_id = request.data.get('user_id')
-        user = get_object_or_404(User, id=user_id)
+        user = request.user  # Get the authenticated user
         title = request.data.get('title')
         category = request.data.get('category', 'expenses')
         amount = request.data.get('amount')

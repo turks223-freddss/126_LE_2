@@ -38,6 +38,9 @@ export default function Reports() {
     savingsRate: 0,
     monthlyGrowth: 0
   });
+  // Add state for overall income vs expenses and expense categories
+  const [overallIncomeVsExpenses, setOverallIncomeVsExpenses] = useState({ income: 0, expenses: 0 });
+  const [overallExpenseCategories, setOverallExpenseCategories] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -65,9 +68,9 @@ export default function Reports() {
       setMonthlyData(response.data.monthly_data);
       setExpenseCategories(response.data.expense_categories);
       
-      // Calculate total metrics from filtered data
-      const totalIncome = response.data.monthly_data.reduce((sum, month) => sum + (month.income || 0), 0);
-      const totalExpenses = response.data.monthly_data.reduce((sum, month) => sum + (month.expenses || 0), 0);
+      // Calculate total metrics from backend response
+      const totalIncome = response.data.total_income || 0;
+      const totalExpenses = response.data.total_expenses || 0;
       const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
       
       setMetrics({
@@ -76,6 +79,9 @@ export default function Reports() {
         savingsRate: Math.round(savingsRate * 100) / 100,
         monthlyGrowth: 0 // This will be calculated if needed for the selected range
       });
+      // Set overall income vs expenses and categories in state
+      setOverallIncomeVsExpenses(response.data.overall_income_vs_expenses || { income: 0, expenses: 0 });
+      setOverallExpenseCategories(response.data.overall_expense_categories || []);
 
       setLoading(false);
       setRefreshing(false);
@@ -130,11 +136,22 @@ export default function Reports() {
     </div>
   );
 
-  const pieChartData = {
-    labels: expenseCategories?.map(item => item.category),
+  const barChartData = {
+    labels: ['Income', 'Expenses'],
     datasets: [
       {
-        data: expenseCategories?.map(item => item.total),
+        label: 'Amount',
+        data: [overallIncomeVsExpenses.income, overallIncomeVsExpenses.expenses],
+        backgroundColor: ['#4BC0C0', '#FF6384'],
+      },
+    ],
+  };
+
+  const pieChartData = {
+    labels: overallExpenseCategories.map(item => item.category),
+    datasets: [
+      {
+        data: overallExpenseCategories.map(item => item.total),
         backgroundColor: [
           '#FF6384',
           '#36A2EB',
@@ -143,22 +160,6 @@ export default function Reports() {
           '#9966FF',
           '#FF9F40',
         ],
-      },
-    ],
-  };
-
-  const barChartData = {
-    labels: monthlyData?.map(item => item.month),
-    datasets: [
-      {
-        label: 'Income',
-        data: monthlyData?.map(item => item.income),
-        backgroundColor: '#4BC0C0',
-      },
-      {
-        label: 'Expenses',
-        data: monthlyData?.map(item => item.expenses),
-        backgroundColor: '#FF6384',
       },
     ],
   };
@@ -293,7 +294,7 @@ export default function Reports() {
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Monthly Income</p>
+                <p className="text-sm text-gray-600">Total Income</p>
                 <p className="text-2xl font-bold">${metrics.totalIncome.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-full">
@@ -305,7 +306,7 @@ export default function Reports() {
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Monthly Expenses</p>
+                <p className="text-sm text-gray-600">Total Expenses</p>
                 <p className="text-2xl font-bold">${metrics.totalExpenses.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-red-100 rounded-full">
@@ -346,13 +347,42 @@ export default function Reports() {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Monthly Income vs Expenses */}
-          <Card className="p-6">
+          <Card className="flex flex-col h-full p-6">
             <div className="flex items-center mb-4">
               <LineChart className="w-6 h-6 mr-2" />
-              <h2 className="text-xl font-semibold">Monthly Income vs Expenses</h2>
+              <h2 className="text-xl font-semibold">Income vs Expenses</h2>
             </div>
-            <div className="h-80">
-              <Bar data={barChartData} options={chartOptions} />
+            <div className="flex-1 min-h-[300px] h-full w-full">
+              <Bar
+                data={barChartData}
+                options={{
+                  ...chartOptions,
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    legend: {
+                      display: false,
+                    },
+                  },
+                  layout: {
+                    padding: 20,
+                  },
+                  scales: {
+                    x: {
+                      grid: { display: false },
+                      ticks: { font: { size: 14 } },
+                    },
+                    y: {
+                      beginAtZero: true,
+                      ticks: { font: { size: 14 } },
+                    },
+                  },
+                  barThickness: 60, // Optional: makes bars thicker
+                  maxBarThickness: 80,
+                }}
+                height={null} // Let the container control the height
+              />
             </div>
           </Card>
 

@@ -47,14 +47,6 @@ export default function Sidebar({ active }) {
                         </Link>
 
                         <Link
-                            to="/budget"
-                            className={linkClass('budget')}
-                        >
-                            <Wallet className="mr-3 h-5 w-5" />
-                            Budget
-                        </Link>
-
-                        <Link
                             to="/history"
                             className={linkClass('history')}
                         >
@@ -68,6 +60,13 @@ export default function Sidebar({ active }) {
                         >
                             <BarChart className="mr-3 h-5 w-5" />
                             Reports
+                        </Link>
+                        <Link
+                            to="/budget"
+                            className={linkClass('budget')}
+                        >
+                            <Wallet className="mr-3 h-5 w-5" />
+                            Budget
                         </Link>
                     </nav>
                 </div>

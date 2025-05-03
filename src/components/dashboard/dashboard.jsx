@@ -6,12 +6,9 @@ import { Plus, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
-import { useNavigate } from 'react-router-dom';
-import Sidebar from './sidebar';
-import BudgetSummary from './BudgetSummary';
-import TransactionForm from './TransactionForm';
-import MonthlyBudgetForm from './AddBudgetForm';
-import TransactionHistory from './TransactionHistory';
+import BudgetSummary from '../finance/BudgetSummary';
+import TransactionForm from '../finance/TransactionForm';
+import MonthlyBudgetForm from '../finance/AddBudgetForm';
 import { useTheme } from '../../contexts/ThemeContext';
 
 ChartJS.register(

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Moon, Sun, LogOut } from 'lucide-react';
 import Button from '../ui/Button';
-import Sidebar from '../dashboard/sidebar';
+import Sidebar from './sidebar';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();

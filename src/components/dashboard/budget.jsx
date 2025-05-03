@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import BudgetTable from './BudgetTable';  
-import MonthlyBudgetForm from './AddBudgetForm';
+import BudgetTable from '../finance/BudgetTable';  
+import MonthlyBudgetForm from '../finance/AddBudgetForm';
 import Card from '../ui/Card'; 
 import { useTheme } from '../../contexts/ThemeContext';
 import { Plus } from 'lucide-react';

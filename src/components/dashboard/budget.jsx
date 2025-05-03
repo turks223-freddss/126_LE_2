@@ -29,6 +29,30 @@ export default function Budget() {
         }
     }, [userId, selectedCategory, dateRange]);
 
+    const onDelete = async (userId, entryId) => {
+        // Confirm the deletion action with the user
+        const confirmed = window.confirm('Are you sure you want to delete this budget entry?');
+        if (!confirmed) return;
+    
+        try {
+            // Make the DELETE request to the server with the userId and entryId
+            const response = await axios.delete(`/api/finances/${userId}/budget/delete/${entryId}/`);
+    
+            // Check if the response status is 204 (No Content), meaning deletion was successful
+            if (response.status === 204) {
+                alert('Budget entry deleted successfully.');
+                // Optionally, refresh the budget data if needed
+                fetchBudgetData();
+            } else {
+                alert(`Error: ${response.data.error}`);
+            }
+        } catch (error) {
+            alert('Something went wrong while deleting the entry.');
+            console.error(error);
+        }
+    };
+    
+
     const fetchBudgetData = async () => {
         try {
             setLoading(true);
@@ -114,7 +138,11 @@ export default function Budget() {
                 )}
 
                 {/* Budget Table */}
-                <BudgetTable budgetData={budgetData} />
+                <BudgetTable
+                budgetData={budgetData}
+                onDelete={onDelete}
+                userId={userId}
+                />
             </Card>
         </div>
     );

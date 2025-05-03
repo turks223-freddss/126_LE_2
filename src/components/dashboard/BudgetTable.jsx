@@ -9,7 +9,7 @@ const BudgetTable = ({
     handleUpdate,
     cancelEditing,
     startEditing,
-    handleDelete,
+    onDelete,
     userId,
 }) => {
     console.log('budgetData:', budgetData);
@@ -17,6 +17,8 @@ const BudgetTable = ({
     const handleUpdateClick = (id, updatedForm) => {
         handleUpdate(userId, id, updatedForm, cancelEditing);
     };
+
+    
 
     return (
         <div className="overflow-x-auto">
@@ -108,7 +110,10 @@ const BudgetTable = ({
                                                 <Edit className="h-5 w-5" />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(userId, item.id)}
+                                                onClick={() => {
+                                                onDelete(userId, item.id);
+                                                window.location.reload();    
+                                                }}
                                                 className="text-red-500 hover:text-red-700"
                                             >
                                                 <Trash className="h-5 w-5" />

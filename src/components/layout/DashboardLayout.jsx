@@ -111,7 +111,7 @@ const DashboardLayout = ({ children }) => {
               onClick={handleLogout}
               variant="ghost"
               size="sm"
-              className={isDark ? 'text-gray-300 hover:text-gray-100' : 'text-gray-600 hover:text-gray-900'}
+              className={isDark ? 'text-gray-300 hover:text-gray-600' : 'text-gray-600 hover:text-white hover:bg-red-500'}
             >
               <LogOut className="h-5 w-5 mr-2" />
               Logout

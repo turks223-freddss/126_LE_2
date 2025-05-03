@@ -5,6 +5,7 @@ from django.conf import settings
 from .models import Income
 from .models import Expense
 from .models import MonthlyBudget
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -17,6 +18,7 @@ from django.db.models.functions import TruncMonth
 from datetime import datetime, timedelta
 from django.db import DatabaseError
 from django.utils import timezone
+from decimal import InvalidOperation
 
 
 User = get_user_model()
@@ -236,20 +238,33 @@ def finance_details(request, user_id):
     return JsonResponse({'finance': combined_data})
 
 def budget_details(request, user_id):
-    # Fetch all budget data for the given user
-    budgets = MonthlyBudget.objects.filter(user_id=user_id)
+    try:
+        # Fetch the budget entries for the user
+        budgets = MonthlyBudget.objects.filter(user_id=user_id)
 
-    # Serialize the data (you can use a serializer here for better structure)
-    serialized_data = [{
-        'month': budget.month,
-        'title': budget.title,
-        'year': budget.year,
-        'amount': str(budget.amount),  # Ensure proper data formatting
-        'description': budget.description,
-    } for budget in budgets]
+        # Even if empty, just return an empty list — no 404
+        serialized_data = []
+        for budget in budgets:
+            try:
+                amount = str(budget.amount)
+            except InvalidOperation:
+                amount = 'Invalid Amount'
 
-    # Return the serialized budget data as JSON
-    return JsonResponse({'budget': serialized_data}, status=200)
+            serialized_data.append({
+                'id': budget.id,
+                'month': budget.month,
+                'title': budget.title,
+                'year': budget.year,
+                'amount': amount,
+                'description': budget.description,
+            })
+
+        return JsonResponse({'budget': serialized_data}, status=200)
+
+    except Exception as e:
+        print(f"Error fetching budget data for user {user_id}: {e}")
+        return JsonResponse({'error': 'Internal server error.'}, status=500)
+
 
 
 @api_view(['PATCH'])
@@ -317,6 +332,38 @@ def delete_finance_entry(request, user_id, entry_id):
 
     except (Income.DoesNotExist, Expense.DoesNotExist):
         return JsonResponse({'error': f'{entry_type.capitalize()} entry not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+def delete_budget_entry(request, user_id, entry_id):
+    try:
+        # Check if the entry exists for the user
+        budget_entry = get_object_or_404(MonthlyBudget, id=entry_id, user_id=user_id)
+        
+        # Delete the entry
+        budget_entry.delete()
+        
+        # Return a 204 No Content response
+        return JsonResponse({}, status=204)  # Empty response body with status 204 (No Content)
+    
+    except MonthlyBudget.DoesNotExist:
+        return JsonResponse({'error': 'Budget entry not found.'}, status=404)
+    except Exception as e:
+        # Log the error for debugging purposes
+        print(f"Error deleting budget entry: {str(e)}")
+        return JsonResponse({'error': 'An error occurred while deleting the entry.'}, status=500)
+
+#@api_view(['DELETE'])
+#def delete_budget_entry(request, user_id, entry_id):
+ #   try:
+        # Find the budget entry for the given user_id and entry_id
+  #      budget_entry = MonthlyBudget.objects.get(id=entry_id, user_id=user_id)
+
+        # Delete the entry
+#        budget_entry.delete()
+
+#        return JsonResponse({'message': 'Budget entry deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+    
+ #   except MonthlyBudget.DoesNotExist:
+  #      return JsonResponse({'error': 'Budget entry not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def get_reports(request, user_id):

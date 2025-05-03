@@ -16,7 +16,8 @@ export default function Filters({
 }) {
 
 
-    const availableMonths = [
+    const availableMonths = budgetData && budgetData.length > 0
+    ? [
         ...new Set(
             budgetData.map(item => `${item.month}-${item.year}`) // Create a unique identifier by combining month and year
         )
@@ -26,7 +27,9 @@ export default function Filters({
             month: parseInt(month, 10), // Convert month to integer
             year: parseInt(year, 10)    // Convert year to integer
         };
-    });
+    })
+    : []; // Fallback to empty array if budgetData is not available or empty
+
     
 
     return (

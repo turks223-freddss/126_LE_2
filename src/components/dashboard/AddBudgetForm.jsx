@@ -7,6 +7,7 @@ const MAX_TITLE_LENGTH = 20;
 const MonthlyBudgetForm = ({ onSubmit, onCancel }) => {
     const [formData, setFormData] = useState({
         amount: '',
+        category:'',
         title: '',
         date: new Date().toISOString().slice(0, 7), // YYYY-MM
         description: '',
@@ -99,6 +100,27 @@ const MonthlyBudgetForm = ({ onSubmit, onCancel }) => {
                 {titleError && (
                 <span className="text-red-500 text-sm">{titleError}</span>
                 )}
+            </div>
+
+            {/* Category Input */}
+            <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                Category
+                </label>
+                <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                <option value="">Select a category</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Miscellanous">Miscellanous</option>
+                </select>
             </div>
 
             {/* Amount */}

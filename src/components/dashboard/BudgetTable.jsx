@@ -26,6 +26,7 @@ const BudgetTable = ({
                     <tr>
                         <th className="px-4 py-3 rounded-tl-lg">Month</th>
                         <th className="px-4 py-3">Title</th>
+                        <th className="px-4 py-3">Category</th>
                         <th className="px-4 py-3">Amount</th>
                         <th className="px-4 py-3 ">Description</th>
                         <th className="px-4 py-3 rounded-tr-lg">Actions</th>
@@ -58,6 +59,26 @@ const BudgetTable = ({
                                         item.title
                                     )}
                                 </td>
+                                <td className="px-4 py-3">
+                                    {editId?.id === item.id && editId?.index === index ? (
+                                        <select
+                                        name="category"
+                                        className="w-full border rounded px-2 py-1"
+                                        value={editForm.category}
+                                        onChange={handleChange}
+                                        >
+                                            <option value="">Select...</option>
+                                            <option value="Food">Food</option>
+                                            <option value="Transport">Transport</option>
+                                            <option value="Utilities">Utilities</option>
+                                            <option value="Entertainment">Entertainment</option>
+                                            <option value="Misc">Miscellanous</option>
+                                        </select>
+                                    ) : (
+                                        item.category
+                                    )}
+                                </td>
+
                                 <td className="px-4 py-3 text-blue-600 font-semibold">
                                     {editId?.id === item.id && editId?.index === index ? (
                                         <input

@@ -26,6 +26,7 @@ class SetMonthlyBudgetView(APIView):
     def post(self, request):
         user = request.user  # Get the authenticated user
         title = request.data.get('title')
+        category = request.data.get('category', 'expenses')
         amount = request.data.get('amount')
         month = request.data.get('month')  # Month (1 to 12)
         year = request.data.get('year')  # Year (e.g., 2025)
@@ -35,6 +36,8 @@ class SetMonthlyBudgetView(APIView):
         
         if not title:
             missing_fields.append('Title')
+        if not category:
+            missing_fields.append('Category')
         if not amount:
             missing_fields.append('Amount')
         if not month:
@@ -51,6 +54,7 @@ class SetMonthlyBudgetView(APIView):
             budget, created = MonthlyBudget.objects.update_or_create(
                 user=user,
                 title=title,
+                category=category,
                 month=month,
                 year=year,
                 defaults={'amount': amount, 'description': description}  # Include description only if provided
@@ -253,6 +257,7 @@ def budget_details(request, user_id):
             serialized_data.append({
                 'id': budget.id,
                 'month': budget.month,
+                'category': budget.category,
                 'title': budget.title,
                 'year': budget.year,
                 'amount': amount,
@@ -315,12 +320,13 @@ def update_finance_entry(request, user_id, entry_id):
 @api_view(['PATCH'])
 def update_budget_entry(request, user_id, entry_id):
     new_title = request.data.get('title')
+    new_category = request.data.get('category')
     new_description = request.data.get('description')
     new_amount = request.data.get('amount')
 
-    if not any([new_title, new_description, new_amount]):
+    if not any([new_title, new_description, new_amount, new_category]):
         return JsonResponse(
-            {'error': 'At least one field (title, description, amount) is required for update.'},
+            {'error': 'At least one field (title, description, amount, category) is required for update.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -331,8 +337,11 @@ def update_budget_entry(request, user_id, entry_id):
             entry.title = new_title
         if new_description:
             entry.description = new_description
+        if new_category:
+            entry.category = new_category
         if new_amount is not None:
             entry.amount = new_amount
+        
 
         entry.save()
 
@@ -379,20 +388,6 @@ def delete_budget_entry(request, user_id, entry_id):
         # Log the error for debugging purposes
         print(f"Error deleting budget entry: {str(e)}")
         return JsonResponse({'error': 'An error occurred while deleting the entry.'}, status=500)
-
-#@api_view(['DELETE'])
-#def delete_budget_entry(request, user_id, entry_id):
- #   try:
-        # Find the budget entry for the given user_id and entry_id
-  #      budget_entry = MonthlyBudget.objects.get(id=entry_id, user_id=user_id)
-
-        # Delete the entry
-#        budget_entry.delete()
-
-#        return JsonResponse({'message': 'Budget entry deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-    
- #   except MonthlyBudget.DoesNotExist:
-  #      return JsonResponse({'error': 'Budget entry not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def get_reports(request, user_id):

@@ -72,6 +72,7 @@ export default function Budget() {
     const [editId, setEditId] = useState(null);
     const [editForm, setEditForm] = useState({
         title: '',
+        category: '',
         description: '',
         amount: '',
     });

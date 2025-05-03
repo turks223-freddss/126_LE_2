@@ -72,7 +72,8 @@ export default function Dashboard() {
       const payload = {
         title: formData.title,
         amount: parseFloat(formData.amount),
-        month: parseInt(month),  
+        category: formData.category,
+        month: parseInt(month), 
         year: parseInt(year),
         description: formData.description || '',  
       };

@@ -26,7 +26,8 @@ class Expense(models.Model):
     
 class MonthlyBudget(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='monthly_budgets')
-    title = models.CharField(max_length=20) 
+    title = models.CharField(max_length=20)
+    category = models.CharField(max_length=50, default='expenses') 
     month = models.CharField(max_length=7)  
     year = models.PositiveIntegerField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
